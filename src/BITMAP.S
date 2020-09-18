@@ -1,6 +1,8 @@
 ; Dessins en m‚moire vid‚o
 ; Vinz/MPS
 
+CLIPPING	EQU	1	; Empˆche le dessin en dehors de l'‚cran
+
 X_RES	EQU	320
 Y_RES	EQU	200
 
@@ -32,9 +34,16 @@ BmpPixelPutMono:
 	move.l	BmpFb,d0		; Economise accŠs m‚moire et cycles
 .loop:	move.w	(a0)+,d1
 	bmi.s	.fin
+	IFNE	CLIPPING
+	cmp.w	#X_RES-1,d1
+	bpl	.x_out
+	ENDC
 	ext.l	d1
 	move.w	(a0)+,d2	; d1.l:x d2.w:y 
-
+	IFNE	CLIPPING
+	cmp.w	#Y_RES-1,d2
+	bpl	.y_out	
+	ENDC
 	add.w	d2,d2
 	add.w	d2,d2
 	movea.l	(a1,d2.w),a3	; Offset Y pris en compte
@@ -52,6 +61,11 @@ BmpPixelPutMono:
 	move.l	(a2,d2.w),-(sp)
 .fin	rts			; plus efficace qu'un jsr
 	include	bp4.s ; Routines de dessin de pixel, une par couleur et par pixel dans un ensemble de 16
+
+	IFNE	CLIPPING		; Support du clipping
+.x_out	addq.l	#2,a0		; Skip y
+.y_out	bra	.loop	
+	ENDC
 
 
 getScreenPos:; d1:x, d2: y
@@ -186,7 +200,7 @@ BmpLine:
 	
 
 BmpCircle:
-	; D‚ssine un cercle par la m‚thode d'AndrŠs
+	; Dessine un cercle par la m‚thode d'AndrŠs
 	; d0.w: couleur
 	; d1.w: x centre
 	; d2.w: y centre
@@ -204,7 +218,7 @@ BmpCircle:
 	swap	d7	; ProtŠge la couleur
 
 .loopc	cmp.w	d5,d4	; compare y et x	
-	bpl	.termine
+	bgt	.termine
 
 	; Pour le dessin on remplit un buffer de
 	; points et quand il est plein on dessine. d7 est le d‚compteur
