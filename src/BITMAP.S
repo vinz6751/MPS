@@ -97,7 +97,9 @@ BmpLine:
 	; abs(y1-y0)
 	move.w	d4,d5	
 	sub.w	d2,d5
-	move.w	d5,y1_y0	; pas assez de registres, on utilise la m‚moire
+	move.w	d5,d6
+	swap	d5
+	move.w	d6,d5	; d5.msw = y1-y0
 	bpl.s	.absy
 	neg.w	d5
 .absy			; d5 = abs(y1-y0)
@@ -116,11 +118,13 @@ BmpLine:
 	exg	d1,d3
 	exg	d2,d4
 .lowswap	bra.s	.plotLineLow
-.high	tst.w	y1_y0	; if y0 > y1
+.high	swap	d5
+	tst.w	d5	; if y0 > y1
 	bpl.s	.highswap
 	exg	d1,d3
 	exg	d2,d4
-.highswap	bra.s	.plotLineHigh
+.highswap	swap	d5
+	bra.s	.plotLineHigh
 
 
 .plotLineLow:
@@ -145,7 +149,7 @@ BmpLine:
 	sub.w	d5,d4	; d4: d = 2*dy-dx
 	add.w	d5,d5	; d5: 2*dx
 	; Liste de point r‚sultante
-	lea	bmpLineBuf,a1
+	lea	bmpPointBuf,a1
 	sub.w	d1,d3	; Pr‚pare le nombre d'it‚rations	
 .loopl:	move.w	d1,(a1)+	; stocke point … dessiner dans la liste
 	move.w	d2,(a1)+
@@ -157,7 +161,7 @@ BmpLine:
 	addq.w	#1,d1	; x++
 	dbra	d3,.loopl
 .loopendl	move.w	#$ffff,(a1) ; fin de la liste de points
-	lea	bmpLineBuf,a0
+	lea	bmpPointBuf,a0
 	bra	BmpPixelPutMono
 	
 	
@@ -183,7 +187,7 @@ BmpLine:
 	; AprŠs on utilise plus que 2*dx et 2*dy
 	add.w	d6,d6	; d6: 2*dy
 	; Liste de point r‚sultante
-	lea	bmpLineBuf,a1	
+	lea	bmpPointBuf,a1	
 	sub.w	d2,d4	; Pr‚pare nombre d'it‚rations
 .looph:	move.w	d1,(a1)+	; stocke point … dessiner dans la liste
 	move.w	d2,(a1)+
@@ -195,7 +199,7 @@ BmpLine:
 	addq.w	#1,d2	; y++
 	dbra	d4,.looph
 .loopendh	move.w	#$ffff,(a1) ; fin de la liste de points
-	lea	bmpLineBuf,a0
+	lea	bmpPointBuf,a0
 	bra	BmpPixelPutMono
 	
 
@@ -213,7 +217,7 @@ BmpCircle:
 	subq.w	#1,d3	; d := r - 1
 	clr.w	d4	; x := 0
 	move.w	#X_RES,d7	; d‚compteur de place dans le buffer de points
-	lea	bmpLineBuf,a0 ; Buffer de points
+	lea	bmpPointBuf,a0 ; Buffer de points
 	move.w	d0,d7
 	swap	d7	; ProtŠge la couleur
 
@@ -293,7 +297,7 @@ BmpCircle:
 	movea.w	d1,a1
 	movea.w	d2,a2
 	move.w	#$ffff,(a0) ; Termine la liste de points
-	lea	bmpLineBuf,a0 ; Liste de points
+	lea	bmpPointBuf,a0 ; Liste de points
 	swap	d7	; R‚cupŠre la couleur
 	move.w	d7,d0
 	swap	d7
@@ -302,7 +306,7 @@ BmpCircle:
 	move.w	a1,d1
 	move.w	a2,d2
 	move.w	#X_RES,d7
-	lea	bmpLineBuf,a0
+	lea	bmpPointBuf,a0
 	rts		
 	
 .termine	; Termine le dessin du cercle
@@ -315,8 +319,7 @@ BmpCircle:
 	EVEN
 bmpLineYOffsets	ds.l	Y_RES	; Offset des lignes dans la m‚moire ‚cran en basse r‚solution
 BmpFb		ds.l	1	; Adresse de la m‚moire vid‚o o— dessiner
-bmpLineBuf	ds.w	X_RES*2 + 1 ; Buffer de points. Doit ˆtre:
+bmpPointBuf	ds.w	X_RES*2 + 1 ; Buffer de points. Doit ˆtre:
 	; >= X_RES pour les lignes traversant l'‚cran
 	; un multiple de 4 car quand on dessine les cercles on stocke 4 points d'un coup
 	; +1 pour le marqueur de fin $ffff
-y1_y0		ds.w	1	; y1-y0 (pas assez de registres)
