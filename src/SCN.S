@@ -7,7 +7,7 @@ ScnDeinit:
 	rts
 
 ScnSet:
-	; Passe en basse r‚solution donn‚e en d0 et assigne nouvelle
+	; Passe en r‚solution donn‚e en d0 et assigne nouvelle
 	; M‚moire vid‚o
 	move.b	$ff8260,ScnOldres
 	move.b	d0,$ff8260	; Low res
@@ -27,6 +27,42 @@ ScnRestore:
 	; Restore
 	move.l	ScnOldfb(pc),$ff8200
 	move.b	ScnOldres(pc),$ff8260	
+	rts
+
+ScnVsyncAndExecute:
+	; Attend la VBL et appelle le code en a0
+	move.b	$469.w,d0	; dernier octet de _vblclock
+.wait	cmp.b	$469.w,d0
+	beq.s	.wait
+	jmp	(a0)
+	
+ScnVsync:
+	; Attend la VBL
+	move.b	$469.w,d0	; dernier octet de _vblclock
+.wait	cmp.b	$469.w,d0
+	beq.s	.wait
+	rts
+
+ScnPaletteSetColorRGB3
+	; d0.w: num‚ro de couleur;
+	; d1.w,d2.w,d3.w: R,G,B sur 3 bits
+	; AltŠre d0-d3/a0
+	andi.w	#%111,d3
+	lsl.w	#8,d1
+	lsl.w	#4,d2
+	or.w	d1,d3
+	or.w	d2,d3
+	add.w	d0,d0
+	lea	$ff8240,a0
+	move.w	d3,(a0,d0.w)
+	rts
+
+ScnPaletteSetColorSte
+	; d0.w num‚ro de couleur
+	; d1.w couleur au format STe (rRRR gGGG bBBB) , minuscule: LSb	
+	lea	$ff8240,a0
+	add.w	d0,d0
+	move.w	d1,(a0,d0.w)
 	rts
 
 	SECTION DATA

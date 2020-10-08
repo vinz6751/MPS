@@ -1,19 +1,50 @@
-; Dessins en m‚moire vid‚o
-; Vinz/MPS
+; Dessins en m‚moire vid‚o. Ces routines sont ‚crites pour fonctionner sur
+; ST en basse r‚solution (320x200, 16 couleurs), le plus rapidement possible
+; quitte … utiliser un peu de m‚moire. Pour optimiser, les techniques
+; suivantes sont utilis‚es:
+; - Utiliser au maximum les registres pour ‚viter les accŠs m‚moire, y 
+;   compris pour stocker les r‚sultats interm‚diaires.
+; - add.w add.w au lieu de lsr.w #1.
+; - Rentabiliser le co–t d'initialisation des fonction en traitant des tableaux de points plut“t qu'un seul.
+; - Empilage puis rts plut“t que jump.
+; - Utilisation de fonctions d'addressage pixel, une par pixel dans un mot et par couleur (bp4.s)
+;
+; Vinz/MPS 2020
 
-CLIPPING	EQU	1	; Empˆche le dessin en dehors de l'‚cran
+CLIPPING	EQU	1	; Empˆche le dessin en dehors de l'‚cran. On peut le d‚sactiver pour gagner quelques cycles.
 
-X_RES	EQU	320
+X_RES	EQU	320	; R‚solution de la m‚moire vid‚o
 Y_RES	EQU	200
+
+; Pour utiliser le module il faut l'initialiser ave BmpInit.
+; Quand on a fini, appeler BmpDeinit.
+;
+; Les fonctions disponibles sont :
+; BmpPixelPutMono: dessine des points tous de la mˆme couleur.
+;   a0: pointeur vers un tableau de paire de mots (x.w,y.w).
+;       x < 0 marque la fin du tableau.
+;   d0: num‚ro de couleur
+
+; BmpLine: dessine un ligne.
+;   a0: pointeur vers un tableau de 2 points (x.w,y.w).
+;       Peu importe l'orientation de la ligne.
+;  d0: num‚ro de couleur
+ 
+; BmpCircle: dessine un cercle
+;   d1: x du centre
+;   d2: y du centre
+;   d3: rayon
+;   d0: num‚ro de couleur
+ 
 
 	SECTION TEXT
 BmpInit:	; Initialise le module
-	; Calcul des offsets de ligne
+	; Calcul des offsets de ligne (16bits seulement)
 	lea	bmpLineYOffsets,a1
-	move.l	#-160,d2	
-	moveq.l	#Y_RES-1,d1
+	move.w	#-160,d2	
+	move.l	#Y_RES-1,d1
 .loop:	addi.l	#160,d2
-	move.l	d2,(a1)+
+	move.w	d2,(a1)+
 	dbra	d1,.loop
 
 BmpDeinit: ; D‚sinitialise le module
@@ -35,18 +66,17 @@ BmpPixelPutMono:
 .loop:	move.w	(a0)+,d1
 	bmi.s	.fin
 	IFNE	CLIPPING
-	cmp.w	#X_RES-1,d1
+	cmpi.w	#X_RES-1,d1
 	bpl	.x_out
 	ENDC
 	ext.l	d1
 	move.w	(a0)+,d2	; d1.l:x d2.w:y 
 	IFNE	CLIPPING
-	cmp.w	#Y_RES-1,d2
+	cmpi.w	#Y_RES-1,d2
 	bpl	.y_out	
 	ENDC
 	add.w	d2,d2
-	add.w	d2,d2
-	movea.l	(a1,d2.w),a3	; Offset Y pris en compte
+	movea.w	(a1,d2.w),a3	; Offset Y pris en compte
 	
 	adda.l	d0,a3		; + adresse de la m‚moire vid‚o
 
@@ -60,7 +90,7 @@ BmpPixelPutMono:
 	add.w	d2,d2
 	move.l	(a2,d2.w),-(sp)
 .fin	rts			; plus efficace qu'un jsr
-	include	bp4.s ; Routines de dessin de pixel, une par couleur et par pixel dans un ensemble de 16
+	include	f:\mps\src\bp4.s ; Routines de dessin de pixel, une par couleur et par pixel dans un ensemble de 16
 
 	IFNE	CLIPPING		; Support du clipping
 .x_out	addq.l	#2,a0		; Skip y
@@ -202,6 +232,37 @@ BmpLine:
 	lea	bmpPointBuf,a0
 	bra	BmpPixelPutMono
 	
+	IFNE	0
+BmpHLine:	; Dessine une ligne horizontale
+	; d1: x1
+	; d2: y
+	; d3: x2
+	; d0: couleur
+	; Assure que x1 < x2
+	cmp.w	d3,d1
+	bmi.s	.ok
+.ok	exg	d1,d3
+	; L'id‚e est la suivante: 
+	; x = x1
+	; d = x2-x1+1
+	; si x1 n'est pas le 16Šme bit d'un mot
+	;  faire
+	;   plot x
+	;   d--
+	;  tant que (d <> 0) ou (x & $f != 0)
+	; Maintenant on est sur le d‚but d'un ensemble de 16 pixels.
+	; Si il reste moins de 16 pixels, il faut les faire 1 par un
+	; Sinon on peut dessiner 16 pixels et r‚pliquer. On peut meme
+	; dessiner 32 pixels si les registres le permettent.
+	; d1: x = x1
+	; d4: d
+	move.w	d3,d4	; x2
+	sub.w	d1,d4	; x2-x1
+	addq.w	#1,d4	; d4: x2-x1+1 d‚compteur de points
+	lea	bmpPointBuf,a0
+	ENDC		
+
+
 
 BmpCircle:
 	; Dessine un cercle par la m‚thode d'AndrŠs
@@ -317,9 +378,9 @@ BmpCircle:
 
 	SECTION BSS
 	EVEN
-bmpLineYOffsets	ds.l	Y_RES	; Offset des lignes dans la m‚moire ‚cran en basse r‚solution
 BmpFb		ds.l	1	; Adresse de la m‚moire vid‚o o— dessiner
+bmpLineYOffsets	ds.l	Y_RES	; Offset des lignes dans la m‚moire ‚cran en basse r‚solution
 bmpPointBuf	ds.w	X_RES*2 + 1 ; Buffer de points. Doit ˆtre:
-	; >= X_RES pour les lignes traversant l'‚cran
-	; un multiple de 4 car quand on dessine les cercles on stocke 4 points d'un coup
-	; +1 pour le marqueur de fin $ffff
+	; - >= X_RES pour les lignes traversant l'‚cran
+	; - Un multiple de 8 car quand on dessine les cercles on stocke 8 points d'un coup.
+	; - +1 pour le marqueur de fin $ffff
