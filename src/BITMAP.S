@@ -11,7 +11,9 @@
 ;
 ; Vinz/MPS 2020
 
+	IFND	CLIPPING
 CLIPPING	EQU	1	; Empˆche le dessin en dehors de l'‚cran. On peut le d‚sactiver pour gagner quelques cycles.
+	ENDC
 
 X_RES	EQU	320	; R‚solution de la m‚moire vid‚o
 Y_RES	EQU	200

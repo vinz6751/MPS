@@ -3,7 +3,11 @@
 	SECTION TEXT
 
 ScnInit:
-ScnDeinit:
+	lea	scnBlanc,a0
+	moveq	#12,d0
+.blanc	clr.l	(a0)+
+	dbra	d0,.blanc
+ScnDeinit
 	rts
 
 ScnSet:
@@ -65,6 +69,24 @@ ScnPaletteSetColorSte
 	move.w	d1,(a0,d0.w)
 	rts
 
+ScnEfface
+	; Ceci fonctionne en utilisant des MOVEM. On utilise le plus
+	; de registres possibles, en gardant que d0 comme d‚compteur
+	; et a6 comme pointeur vers m‚moire vid‚o. Essay‚ d'utiliser
+	; sp mais ‡a marche pas. Je pense si y'a une interruption ‡a
+	; empile des trucs et ‡a met la zone. J'ai essay‚ de d‚sactiver 
+	; interruptions mais ‡a marchait quand mˆme pas.
+	move.l	#FBSIZE/4/13-1,d0
+	; Charge les 13 registres
+	movem.l	scnBlanc,d1-a5
+	movea.l	BmpFb,a6
+	adda.w	#32004,a6	; … cause de la pr‚d‚cr‚mentation
+.boucle	movem.l	d1-a5,-(a6)	
+	dbra	d0,.boucle
+	movem.l	d1-d6,-(a6) ; encore 20 octets	
+	rts
+
+
 	SECTION DATA
 	EVEN
 ScnOldfb:	dc.l	1	; Adresse de l'ancienne m‚moire vid‚o
@@ -74,3 +96,4 @@ ScnOldres: dc.b	1	; Ancienne r‚solution
 	EVEN
 ScnFb:	ds.l	1	; Pointeur vers zone m‚moire ‚cran
 ScnFbbuf:	ds.b	32256	; Pour etre sur d'aligner l'‚cran sur 256 octets
+scnBlanc	ds.l	13	; Tout … 0, pour effacer l'‚cran
