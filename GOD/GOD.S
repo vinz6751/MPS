@@ -39,6 +39,7 @@ Main	move.l	sp,OldStack
 
 	; Passe en basse r‚solution
 	clr.w	d0
+	lea	Fb,a0
 	bsr	ScnSet	
 
 	; Fixe l'adresse logique pour le dessin
@@ -206,7 +207,7 @@ ZicSnd	INCBIN	F:\MPS\GOD\ZICS\test_zxx.snd
 
 	SECTION BSS
 	EVEN
-FlagQuitter	ds.w	0	; Si -1 on quitte
+FlagQuitter	ds.w	1	; Si -1 on quitte
 	IFNE	DEBUG
 OldStack	ds.l	1	; ancienne pile
 OldPalette ds.w	16	; ancienne palette de couleur	
@@ -215,3 +216,4 @@ OldKbdVecs	ds.l	1; ancien vecteur clavier
 	ENDC
 	ds.b	1024	; 1Ko de pile
 Stack	ds.l	1	; sommet de la pile
+Fb	ds.l	FBSIZE+256+10*160 ; 256 pour alignement 16bit, 10 lignes suppl‚mentaire pour scrolltext
