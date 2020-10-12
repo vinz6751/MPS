@@ -1,5 +1,9 @@
 ; GŠre l'‚cran (r‚solutions, m‚moire)
 
+	IFND	FBSIZE
+FBSIZE	EQU	32000
+	ENDC
+
 	SECTION TEXT
 
 ScnInit:
@@ -12,13 +16,16 @@ ScnDeinit
 
 ScnSet:
 	; Passe en r‚solution donn‚e en d0 et assigne nouvelle
-	; M‚moire vid‚o
+	; M‚moire vid‚o pass‚e en a0.
+	; L'adresse de la m‚moire ‚cran effective esc conserv‚e en
+	; ScnFb. L'ancienne adresse en ScnOlffb
+	; TODO: Aligner sur 256 ou 16 bits suivant STf ou STe
 	move.b	$ff8260,ScnOldres
 	move.b	d0,$ff8260	; Low res
 
 	; M‚moire ‚cran
 	move.l	$ff8200,ScnOldfb
-	move.l	#ScnFb,d0
+	move.l	a0,d0
 	add.l	#$ff,d0
 	clr.b	d0
 	move.l	d0,ScnFb
@@ -70,6 +77,7 @@ ScnPaletteSetColorSte
 	rts
 
 ScnEfface
+	; Efface l'‚cran (32000 octets).
 	; Ceci fonctionne en utilisant des MOVEM. On utilise le plus
 	; de registres possibles, en gardant que d0 comme d‚compteur
 	; et a6 comme pointeur vers m‚moire vid‚o. Essay‚ d'utiliser
@@ -89,11 +97,10 @@ ScnEfface
 
 	SECTION DATA
 	EVEN
-ScnOldfb:	dc.l	1	; Adresse de l'ancienne m‚moire vid‚o
-ScnOldres: dc.b	1	; Ancienne r‚solution
+ScnOldfb	dc.l	1	; Adresse de l'ancienne m‚moire vid‚o
+ScnOldres	dc.b	1	; Ancienne r‚solution
 
 	SECTION BSS
 	EVEN
 ScnFb:	ds.l	1	; Pointeur vers zone m‚moire ‚cran
-ScnFbbuf:	ds.b	32256	; Pour etre sur d'aligner l'‚cran sur 256 octets
 scnBlanc	ds.l	13	; Tout … 0, pour effacer l'‚cran
