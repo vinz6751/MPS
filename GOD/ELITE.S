@@ -34,9 +34,9 @@ EliteAnimation
 	neg.w	d4		; repart dans l'autre sens
 	bra.s	.ye2ok
 .ye2nomin
-	cmp.w	#YRES-1-43,d3	; y max
+	cmp.w	#YRES-1-43-10,d3	; y max
 	blt.s	.ye2ok
-	move.w	#YRES-1-43,d3
+	move.w	#YRES-1-43-10,d3
 	neg.w	d4		; repart vers le haut
 .ye2ok	tst.w	d4		; suivant le sign du delta on monte ou descend
 	bmi.s	.ye2down
@@ -63,7 +63,7 @@ EliteAnimation
 	neg.w	Elite_dye
 	clr.w	d0
 .notymin
-	cmpi.w	#YRES-1-39,d0
+	cmpi.w	#YRES-1-39-10,d0
 	blt.s	.notymax
 	neg.w	Elite_dye
 .notymax

@@ -47,8 +47,8 @@ Main	move.l	sp,OldStack
 
 	RestaurePalette ElitePalette
 	bsr	VblInstalle
-;	bsr	KbdInstalle
 	bsr	MusiqueInit
+;	bsr	KbdInstalle
 	bsr	ScnEfface
 	bsr	AlienInit
 	bsr	EliteInit
@@ -74,6 +74,7 @@ BouclePrincipale
 ;	bsr	AlienDeinit
 ;	bsr	KbdDesinstalle
 	bsr	VblDesinstalle
+	bsr	MusiqueDeinit
 	bsr	ScnRestore
 	bsr	ScnDeinit
 	RestaurePalette OldPalette
@@ -152,6 +153,10 @@ VblRoutine
 MusiqueInit
 	jsr	ZicSnd	; Init
 	rts
+	
+MusiqueDeinit
+	jsr	ZicSnd+4
+	rts
 
 KbdInstalle
 	move.l	KBD_VECS.w,OldKbdVecs
@@ -205,7 +210,7 @@ ChunkCouleur ; 4 pixels de la mˆme couleur d'un chunk
 		
 	EVEN
 
-ZicSnd	INCBIN	F:\MPS\GOD\ZICS\test_zxx.snd
+ZicSnd	INCBIN	F:\MPS\GOD\ZICS\digitalf.snd   ;test_zxx.snd
 
 	SECTION BSS
 	EVEN
