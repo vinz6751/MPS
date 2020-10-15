@@ -74,3 +74,13 @@ BlitCalcOffset
 	add.l	BmpFb,d0
 	rts
 	
+Blit16x10	; Blitte le bloc de 16x10 pixels point‚ par a0 vers l'adresse
+	; point‚e par a1
+	; N'affecte rien
+b1610l	SET	0	; Offset de ligne
+	REPT	10
+	move.l	b1610l(a0),b1610l(a1)
+	move.l	b1610l+4(a0),b1610l+4(a1)
+b1610l	SET	b1610l+160
+	ENDR
+	rts

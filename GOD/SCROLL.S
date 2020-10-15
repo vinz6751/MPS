@@ -5,60 +5,135 @@
 ; courant en train d'apparaåtre en base Ö droite, et on la blitte en bas
 ; Ö droite. Puis on dÇcale tout la rÇgion scrolltext d'un cran
 
-FONTE_W	EQU	16
+FONT_W	EQU	16
 FONT_H	EQU	10
 
 	SECTION TEXT
 
-ScrollInit
-	rts
-
+ScrollInit	
+	bsr	scrollPrepCar	
+	movea.l	BmpFb,a4
+	lea	scrollBuf,a3
+	moveq	#9,d3
+.lp	move.l	(a3)+,(a4)
+	move.l	(a3)+,4(a4)
+	adda.l	#160,a4
+	dbra	d3,.lp
 ScrollDeinit
 	rts
 
 ScrollAnimation
-	bsr	Scroller
+	; Ralentisseur
+	move.w	.ralentisseur,d7
+	bne.s	.attend
+	move.w	#2,.ralentisseur
+	bra.s	.do	
+		
+.attend	subi.w	#1,.ralentisseur
 	rts
-
-	move.b	ScrollPix,d5
-
-	addq.b	#1,d5	; Colonne suivante dans le bitmap du caractäre
-	andi.b	#$f,d5	; Fonte fait 16px de large
-	bne.s	.pasNouveauCar
-.nouveauCar	; Nouveau caractäre, rÇcupäre les infos pour prochaine itÇration
-	movea.l	ScrollCar,a6
-	addq.l	#1,a6		; addresse caractäre suivant
-	move.l	a6,ScrollCar
-	clr.l	d6
-	move.b	(a6),d6		; d6: caractäre Ö afficher
-	bsr	ScrollGetCarBitmap ; rÇcup bitmap char Ö afficher dns a6
-	;bsr	ScrollBlitCar
+.do
 	
-.pasNouveauCar
-	move.b	d5,ScrollPix
+	; DÇcompteur de pixel et chargement du prochain caractäre
+	subi.w	#1,scrollPix
+	bne.s	.scroll
+	; Charge nouveau caractäre dans scrollBuf
+	move.w	#FONT_W-1,scrollPix
+	bsr	scrollPrepCar
+	
+.scroll	lea	scrollBuf,a1
+	movea.l	BmpFb,a3
+	adda.l	#160*(Y_RES-1-FONT_H),a3
+	moveq	#FONT_H-1,d3
+.boucle	;movea.l	a2,a3
+	; plan 0
+	lsl.w	(a1)+	; rÇcupäre bit du plan 0
+sxo	SET	152 ; scroll x offset
+	REPT	20
+	roxl	sxo(a3)	; insäre en pixel 15 plan0 dernier chunk de ligne et dÇcale toute la ligne
+sxo	SET	sxo-8	; chunk prÇcÇdent
+	ENDR
+	; plan 1
+	lsl.w	(a1)+	; rÇcupäre bit du plan 1
+sxo	SET	154 ; scroll x offset
+	REPT	20
+	roxl	sxo(a3)	; insäre en pixel 15 plan0 dernier chunk de ligne et dÇcale toute la ligne
+sxo	SET	sxo-8	; chunk prÇcÇdent
+	ENDR
+	; plan 2
+	lsl.w	(a1)+	; rÇcupäre bit du plan 2
+sxo	SET	156 ; scroll x offset
+	REPT	20
+	roxl	sxo(a3)	; insäre en pixel 15 plan0 dernier chunk de ligne et dÇcale toute la ligne
+sxo	SET	sxo-8	; chunk prÇcÇdent
+	ENDR
+	; plan 4
+	lsl.w	(a1)+	; rÇcupäre bit du plan 0
+sxo	SET	158 ; scroll x offset
+	REPT	20
+	roxl	sxo(a3)	; insäre en pixel 15 plan0 dernier chunk de ligne et dÇcale toute la ligne
+sxo	SET	sxo-8	; chunk prÇcÇdent
+	ENDR
+
+	lea	160(a3),a3
+	dbra	d3,.boucle
 
 	rts
+.ralentisseur	dc.w	$32
 
+
+scrollPrepCar
+	; PrÇpare le prochain caractäre du scrolltext
+	movea.l	scrollCar,a0
+	move.b	(a0)+,d2 	; caractäre Ö afficher
+	bne.s	.carOk
+	movea.l	#scrollMessage,a0 ; reset du message
+.carOk	move.l	a0,scrollCar
+	cmpi.b	#'A',d2
+	blt.s	.pasAlpha
+	cmpi.b	#'Z',d2
+	bgt.s	.pasAlpha
+	lea	scrollFont+34,a0
+	; Trouve l'adresse de la cellule
+	andi.w	#$00ff,d2
+	subi.w	#'A',d2
+	cmpi.w	#20,d2	; on a 20 caractäres sur la premiäre ligne de fonte
+	blt.s	.ligne1
+	adda.w	#FONT_H*160,a0 ; pointe sur 2äme ligne
+.ligne1	lsl.w	#3,d2	; cellules font  de large
+	add.w	d2,a0
+	bra.s	.blitc
+
+.pasAlpha	lea	scrollFont+34+FONT_H*160*3,a0 ; pointe sur du vide
+	
+.blitc	; Copie le caractäre dans le buffer
+	lea.l	scrollBuf,a1
+offset	SET	0
+	REPT	FONT_H
+	move.l	offset(a0),(a1)+
+	move.l	offset+4(a0),(a1)+
+offset	SET	offset+160	
+	ENDR
+	rts	
 
 ScrollGetCarBitmap
 	; Trouve la bitmap pour le caractäre passÇ en d6.w
 	; et retourne en a6
 	; Affecte d6,a6
-	lea	ScrollFont+160,a6 ; skip ligne rouge. DÇfaut=premier caractäre
+	lea	scrollFont+160,a6 ; skip ligne rouge. DÇfaut=premier caractäre
 	cmpi.b	#'A',d6	
 	blt.s	.fin
 	cmpi.b	#'Z',d6
 	bgt.s	.fin
 	lsr.w	#4,d6	; numÇro de caractäre -> offset dans table (chaque car fait 4mots)
 	lea	(a6,d6.w),a6
-	move.l	a6,ScrollCarBmp
+	move.l	a6,scrollCarBmp
 .fin	rts
 
 
 Scroller
 	; 8pixels par itÇration
 	movea	BmpFb,a4
-	adda.l	#(199-FONT_H)*160,a4
+	adda.l	#FBSIZE+FONT_H*160,a4
 	moveq	#FONT_H-1,d4
 sx	SET	152	; les 8 derniers sont lÖ ou on insäre
 .bcl	REPT	20	; 
@@ -68,57 +143,20 @@ sx	SET	sx-8
 	lea	160(a4),a4	; ligne suivante
 	dbra	d4,.bcl
 	rts
-
-
-ScrollBlitCar
-	; Blitte la colonne d5 du caractäre 16x10 pointÇ par a6 
-	; au point d'insertion du scrolltext (cÖd bord bas droit-hauteur fonte)
-	movea	BmpFb,a4
-	moveq	#FONT_H-1,d3
-	adda.l	#320*200-160*FONT_H-16,a4
-.bcllin	
-.bpl0	btst	d5,(a6)	; Plan 0
-	beq.s	.blc0
-	bset	#0,-8(a4)
-	bra.s	.bpl1
-.blc0	bclr	#0,-8(a4)
-
-.bpl1	btst	d5,2(a6)	; Plan 1
-	beq.s	.blc1
-	bset	#0,-6(a4)
-	bra.s	.bpl1
-.blc1	bclr	#0,-6(a4)
-
-.bpl2	btst	d5,4(a6)	; Plan 2
-	beq.s	.blc2
-	bset	#0,-4(a4)
-	bra.s	.bpl1
-.blc2	bclr	#0,-4(a4)
-
-.bpl3	btst	d5,(a6)		; Plan 3
-	beq.s	.blc3
-	bset	#0,-2(a4)
-	bra.s	.finbcl
-.blc3	bclr	#0,-2(a4)
-
-.finbcl	lea	160(a6),a6	; Ligne suivante
-	dbra	d3,.bcllin
-
-.fin	rts		
-
 	
 	
 	SECTION DATA
-ScrollMessage	dc.b 	"CECI EST UN MESSAGE A SCROLLER",0
+scrollMessage	dc.b 	"CECI EST UN MESSAGE A SCROLLER OK CE N EST PAS TOP MAIS C EST MON PREMIER ECRAN      MPS POWER     ",0
 	EVEN
-ScrollFont	;INCBIN	grenier\font.pi1
+scrollFont	INCBIN	font\font2bis.pi1
 
 	EVEN
-ScrollCar	dc.l	ScrollMessage ; pointeur vers caractäre courant
-ScrollPix	dc.l 0 	; colonne Ö afficher
+scrollCar	dc.l scrollMessage 	; pointeur vers caractäre courant
+scrollPix	dc.w FONT_W-1	; dÇcompteur de colonne de cellule Ö afficher
 	
 	SECTION BSS
-ScrollCarBmp	ds.l 1 	; Pointeur vers l'image du caractäre Ö afficher
+scrollCarBmp	ds.l 1 	; Pointeur vers l'image du caractäre Ö afficher
 
+scrollBuf		ds.b	FONT_W*FONT_H ; buffer ou on dÇcale les bits du caractäre Ö afficher
 	SECTION TEXT
 

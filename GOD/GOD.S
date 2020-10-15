@@ -8,7 +8,7 @@
 
 	; D‚finitions mat‚rielles
 VBL		EQU	$70
-KBD_VECS	EQU	$118
+KBD_VECS		EQU	$118
 KBD_ACIA_CTRL	EQU	$fffffc00
 KBD_ACIA_DATA	EQU	$fffffc02
 
@@ -18,7 +18,7 @@ FBSIZE	EQU	32000
 
 
 	; Pr‚f‚rences
-DEBUG		EQU	1
+DEBUG	EQU	1
 CLIPPING	EQU 	0 ; Dans bitmap.s
 
 	SECTION TEXT
@@ -52,24 +52,25 @@ Main	move.l	sp,OldStack
 	bsr	ScnEfface
 	bsr	AlienInit
 	bsr	EliteInit
+	bsr	ScrollInit
 
 	clr.w	FlagQuitter
 BouclePrincipale
 	Bconstat2
 ;	tst.w	FlagQuitter
-	bne.s	Quitte
+	bne.s	.quitte
 
-;	bsr	EffaceEcran
+;	bsr	ScnEfface
 ;	bsr	AlienAnimation
 	bsr	EliteAnimation
+	bsr	ScrollAnimation
+;	bsr	AnimationRaster		
 
 	bra.s	BouclePrincipale
 
-	;bsr	AnimationRaster
-.attend	
-
-Quitte		
+.quitte		
 	IFNE	DEBUG
+	bsr	ScrollDeinit
 ;	bsr	AlienDeinit
 ;	bsr	KbdDesinstalle
 	bsr	VblDesinstalle
@@ -78,7 +79,8 @@ Quitte
 	RestaurePalette OldPalette
 	move.l	OldStack,sp
 	ENDC
-	rts
+
+	rts	 ; Retour de la fonction principale
 
 
 LigneHorizontale
