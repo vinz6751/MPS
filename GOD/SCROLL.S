@@ -10,17 +10,16 @@
 FONT_W	EQU	16
 FONT_H	EQU	10
 FONT_LEN	EQU	43
-FONTL2	EQU	(FONT_H-2)*160 ; 2äme ligne de la fonte
-FONTL3	EQU	(FONT_H-1)*160*2 ; 3äme ligne de la fonte
+
 
 	SECTION TEXT
 
 ScrollInit	
 	lea 	scrollFntIndex,a1
-	lea	scrollFont,a2
-	move.w	#25,d1
-.bcl	move.l	a2,(a1)+
-	addi.l	#FONT_W/16*FONT_H,a2
+	move.l	#scrollFont,d2
+	move.w	#42,d1
+.bcl	move.l	d2,(a1)+
+	addi.l	#8*FONT_H,d2
 	dbra	d1,.bcl
 	rts
 	
@@ -36,7 +35,6 @@ ScrollAnimation
 .attend	subi.w	#1,.ralentisseur
 	rts
 .do
-	
 	; DÇcompteur de pixel et chargement du prochain caractäre
 	subi.w	#1,scrollPix
 	bne.s	.scroll
@@ -76,48 +74,57 @@ scrollPrepCar
 	; PrÇpare le prochain caractäre du scrolltext
 	movea.l	scrollCar,a0
 	move.b	(a0)+,d2 	; caractäre Ö afficher
+	ext.w	d2
 	bne.s	.carOk
 	movea.l	#scrollMessage,a0 ; reset du message
-.carOk	move.l	a0,scrollCar
-	lea	scrollFont,a0
-	cmpi.b	#'A',d2
-	blt.s	.pasAlpha
+.carOk	lea	scrollFntIndex,a2	
+	move.l	a0,scrollCar
 	cmpi.b	#'Z',d2
 	bgt.s	.pasAlpha
+	cmpi.b	#'A',d2
+	blt.s	.pasAlpha
 .alpha	; Trouve l'adresse de la cellule
-	andi.w	#$00ff,d2
 	subi.w	#'A',d2
-	mulu.w	#80,d2 
-	add.w	d2,a0
+	add.w	d2,d2
+	add.w	d2,d2
+	movea.l	(a2,d2.w),a0
 	bra.s	.blitc
 
 .pasAlpha	
+	cmpi.b	#'0',d2
+	blt.s	.pasChiffre
+	subi.b	#'0'-26,d2
+	add.w	d2,d2
+	add.w	d2,d2
+	movea.l	(a2,d2.w),a0
+	bra.s	.blitc
+	
+.pasChiffre
 .point	cmpi.b	#'.',d2
 	bne.s	.virgule
-	lea.l	FONTL2+160+16*8(a0),a0	
+	movea.l	36*4(a2),a0
 	bra.s	.blitc
 .virgule	cmpi.b	#',',d2
 	bne.s	.tiret
-	lea.l	FONTL2+160+17*8(a0),a0
+	movea.l	37*4(a2),a0
 	bra.s	.blitc
 .tiret	cmpi.b	#'-',d2
 	bne.s	.exclam
-	lea.l	FONTL2+160+18*8(a0),a0
+	movea.l	38*4(a2),a0
 	bra.s	.blitc
 .exclam	cmpi.b	#'!',d2
 	bne.s	.apostrof
-	lea.l	FONTL2+160+19*8(a0),a0
+	movea.l	39*4(a2),a0
 	bra.s	.blitc
 .apostrof	cmpi.b	#$27,d2
 	bne.s	.interrog
-	lea.l	FONTL3(a0),a0
+	movea.l	40*4(a2),a0
 	bra.s	.blitc
 .interrog	cmpi.b	#'?',d2
 	bne.s	.inconnu
-	lea.l	FONTL3+8(a0),a0
+	movea.l	41*4(a2),a0
 	bra.s	.blitc
-.inconnu
-	lea	scrollFont+34+FONT_H*160*3,a0 ; pointe sur du vide
+.inconnu	movea.l	42*4(a2),a0 ; pointe sur du vide
 	
 .blitc	; Copie le caractäre dans le buffer
 	lea.l	scrollBuf,a1
@@ -130,7 +137,8 @@ offset	SET	offset+8
 	rts		
 	
 	SECTION DATA
-scrollMessage	dc.b "ABCDEFGHIJKLMNOPQRSTUVWXYZ .,-!'? CECI EST UN MESSAGE A SCROLLER ! BON C'EST PAS TOP MAIS C'EST MON PREMIER ECRAN !! MPS POWER !!   ",0
+scrollMessage	dc.b "ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789 .,-!'? CECI EST UN MESSAGE A SCROLLER ! BON C'EST PAS TOP MAIS C'EST MON PREMIER ECRAN !! MPS POWER !!   ",0
+
 	EVEN
 scrollFont	INCBIN	font\fonte.bin
 
