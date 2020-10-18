@@ -139,7 +139,7 @@ ll	INCBIN	elite\lettre-l.pi1
 li	INCBIN	elite\lettre-i.pi1
 lt	INCBIN	elite\lettre-t.pi1
 le2	INCBIN	elite\lettr-e2.pi1
-palette	INCBIN	logo8-1.pi1
+palette	INCBIN	font\font3.pi1
 	EVEN
 
 nom_e	dc.b	"elite\e.bin",0
