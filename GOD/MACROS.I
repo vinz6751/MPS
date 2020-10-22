@@ -11,6 +11,64 @@ Cnecin	MACRO
 	addq.l	#2,sp
 	ENDM
 
+Fopen	MACRO
+	move.w	#0,-(sp)	; Read only
+	pea	\1
+	move.w	#61,-(sp)
+	trap	#1
+	addq.l	#8,sp
+	ENDM
+	
+Fdelete	MACRO
+	pea	\1
+	move.w	#65,-(sp)
+	trap	#1
+	addq.l	#6,sp
+	ENDM
+
+Fseek	MACRO
+	move.w	\3,-(sp)
+	move.w	\2,-(sp)
+	move.l	\1,-(sp)
+	move.w	#66,-(sp)
+	trap	#1
+	lea	10(sp),sp
+	ENDM
+
+Fcreate	MACRO
+	move.w	#0,-(sp)
+	pea	\1
+	move.w	#60,-(sp)	; Fcreate
+	trap	#1
+	addq.l	#8,sp
+	ENDM
+
+Fwrite	MACRO
+	pea	\3
+	move.l	\2,-(sp)
+	move.w	\1,-(sp)
+	move.w	#64,-(sp)	; Fwrite
+	trap	#1
+	lea.l	12(sp),sp
+	ENDM
+
+Fread	MACRO
+	pea	\3
+	move.l	\2,-(sp)
+	move.w	\1,-(sp)
+	move.w	#63,-(sp)	; Fread
+	trap	#1
+	lea.l	12(sp),sp
+	ENDM
+
+Fclose	MACRO
+	move.w	\1,-(sp)
+	move.w	#62,-(sp)
+	trap	#1
+	addq.l	#4,sp
+	ENDM
+
+
 Pterm0	MACRO
 	clr.w	-(sp)
 	trap	#1	; Pterm0

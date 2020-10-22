@@ -6,34 +6,19 @@ Y	EQU	0
 LARGEUR	EQU	31
 HAUTEUR	EQU	39
 
+	INCLUDE	macros.i
+
 	; Sauve le buffer dans le fichier nomm‚ par a5
 SAUVE	MACRO
-	pea	\1
-	move.w	#65,-(sp)
-	trap	#1
-	addq.l	#6,sp
-
-	move.w	#0,-(sp)
-	pea	\1
-	move.w	#60,-(sp)	; Fcreate
-	trap	#1
-	addq.l	#8,sp
+	Fdelete	\1
+	Fcreate	\1,0
 	move.w	d0,handle
-	;
-	pea	buf
-	move.l	len,-(sp)
-	move.w	d0,-(sp)
-	move.w	#64,-(sp)	; Fwrite
-	trap	#1
-	lea.l	14(sp),sp
-	;
-	move.w	handle,-(sp)
-	move.w	#62,-(sp)
-	trap	#1
-	addq.l	#4,sp
+	Fwrite	d0,len,buf
+	Fclose	handle
 	ENDM
 
 
+main
 	bsr	calculeYoffset
 
 xpalette:
@@ -42,7 +27,6 @@ xpalette:
 	move.l	#32,len
 	SAUVE	nom_palette
 
-	
 
 xe:	lea	le+34,a0 ; passe 2 octets en tˆte plus 32 palette
 	lea	buf,a1
@@ -109,8 +93,66 @@ xe2:	lea	le2+34,a0 ; passe 2 octets en tˆte plus 32 palette
 	ENDR
 	SAUVE	nom_e2
 
-	clr.w	-(sp)	; Pterm0
-	trap	#1			
+scrollMessage:
+	Fopen	nom_scrollmsg
+	move.w	d0,handle
+	Fseek	#0,handle,#2
+	move.l	d0,d7
+	Fseek	#0,handle,#0
+	Fread	handle,d7,buf
+	Fclose	handle
+	lea	buf,a0
+	move.b	#-1,(a0,d7.w)	; force fin du message
+.boucle	move.b	(a0),d0
+	beq.s	.fait
+	cmpi.b	#'0',d0
+	blt.s	.pasChiffre
+	cmpi.b	#'9',d0
+	bgt.s	.pasChiffre
+	subi.b	#'0'-('Z'-'A'+1),(a0)+
+	bra.s	.boucle
+.pasChiffre
+	cmpi.b	#' ',d0
+	bne.s	.point
+	move.b	#42,(a0)+
+	bra.s	.boucle	
+.point	cmpi.b	#'.',d0
+	bne.s	.virgule
+	move.b	#36,(a0)+
+	bra.s	.boucle
+.virgule	cmpi.b	#',',d0
+	bne.s	.tiret
+	move.b	#37,(a0)+
+	bra.s	.boucle
+.tiret	cmpi.b	#'-',d0
+	bne.s	.exclam
+	move.b	#38,(a0)+
+	bra.s	.boucle
+.exclam	cmpi.b	#'!',d0
+	bne.s	.apostrof
+	move.b	#39,(a0)+
+	bra.s	.boucle
+.apostrof	cmpi.b	#$27,d0
+	bne.s	.interrog
+	move.b	#40,(a0)+
+	bra.s	.boucle
+.interrog	cmpi.b	#'?',d0
+	bne.s	.alpha
+	move.b	#41,(a0)+
+	bra.s	.boucle
+.alpha	subi.b	#'A',(a0)+
+	bra.s	.boucle
+	
+.fait	move.b	#-1,(a0)
+	addq.l	#1,d7	; ajoute octet de fin
+	Fdelete	nom_scrollbin
+	Fcreate	nom_scrollbin
+	move.w	d0,handle
+	Fwrite	handle,d7,buf
+	Fclose	handle
+	
+	
+	Pterm0
 
 	
 calculeYoffset
@@ -122,10 +164,6 @@ calculeYoffset
 	dbra	d0,.boucle
 	rts
 	
-
-	
-
-
 	SECTION BSS
 buf	DS.W	32000
 x	DS.W	1
@@ -133,6 +171,7 @@ y	DS.W	1
 yoffset	DS.W	200
 len	DS.L	1
 handle	DS.W	1
+
 	SECTION DATA
 le	INCBIN elite\lettre-e.pi1
 ll	INCBIN	elite\lettre-l.pi1
@@ -148,3 +187,5 @@ nom_i	dc.b	"elite\i.bin",0
 nom_t	dc.b	"elite\t.bin",0
 nom_e2	dc.b	"elite\e2.bin",0
 nom_palette	dc.b	"elite\palette.bin",0
+nom_scrollmsg 	dc.b "message.txt",0
+nom_scrollbin	dc.b "message.bin",0

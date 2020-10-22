@@ -17,7 +17,7 @@ FONT_LEN	EQU	43
 ScrollInit	
 	lea 	scrollFntIndex,a1
 	move.l	#scrollFont,d2
-	move.w	#42,d1
+	move.w	#FONT_LEN-1,d1
 .bcl	move.l	d2,(a1)+
 	addi.l	#8*FONT_H,d2
 	dbra	d1,.bcl
@@ -28,13 +28,13 @@ ScrollDeinit
 
 ScrollAnimation
 	; Ralentisseur
-	move.w	.ralentisseur,d7
-	bne.s	.attend
-	move.w	#2,.ralentisseur
-	bra.s	.do			
-.attend	subi.w	#1,.ralentisseur
-	rts
-.do
+;	move.w	.ralentisseur,d7
+;	bne.s	.attend
+;	move.w	#2,.ralentisseur
+;	bra.s	.do			
+;.attend	subi.w	#1,.ralentisseur
+;	rts
+;.do
 	; DÇcompteur de pixel et chargement du prochain caractäre
 	subi.w	#1,scrollPix
 	bne.s	.scroll
@@ -72,73 +72,32 @@ sxo	SET	sxo-8
 
 scrollPrepCar
 	; PrÇpare le prochain caractäre du scrolltext
-	movea.l	scrollCar,a0
-	move.b	(a0)+,d2 	; caractäre Ö afficher
+	movea.l	scrollCar(pc),a0
+.redo	move.b	(a0)+,d2 	; caractäre Ö afficher
 	ext.w	d2
-	bne.s	.carOk
+	bpl.s	.carOk	; > -1 est marqueur de fin de message
 	movea.l	#scrollMessage,a0 ; reset du message
-.carOk	lea	scrollFntIndex,a2	
-	move.l	a0,scrollCar
-	cmpi.b	#'Z',d2
-	bgt.s	.pasAlpha
-	cmpi.b	#'A',d2
-	blt.s	.pasAlpha
-.alpha	; Trouve l'adresse de la cellule
-	subi.w	#'A',d2
+	bra.s	.redo
+.carOk	move.l	a0,scrollCar
+	lea	scrollFntIndex,a2	
 	add.w	d2,d2
 	add.w	d2,d2
 	movea.l	(a2,d2.w),a0
-	bra.s	.blitc
-
-.pasAlpha	
-	cmpi.b	#'0',d2
-	blt.s	.pasChiffre
-	subi.b	#'0'-26,d2
-	add.w	d2,d2
-	add.w	d2,d2
-	movea.l	(a2,d2.w),a0
-	bra.s	.blitc
-	
-.pasChiffre
-.point	cmpi.b	#'.',d2
-	bne.s	.virgule
-	movea.l	36*4(a2),a0
-	bra.s	.blitc
-.virgule	cmpi.b	#',',d2
-	bne.s	.tiret
-	movea.l	37*4(a2),a0
-	bra.s	.blitc
-.tiret	cmpi.b	#'-',d2
-	bne.s	.exclam
-	movea.l	38*4(a2),a0
-	bra.s	.blitc
-.exclam	cmpi.b	#'!',d2
-	bne.s	.apostrof
-	movea.l	39*4(a2),a0
-	bra.s	.blitc
-.apostrof	cmpi.b	#$27,d2
-	bne.s	.interrog
-	movea.l	40*4(a2),a0
-	bra.s	.blitc
-.interrog	cmpi.b	#'?',d2
-	bne.s	.inconnu
-	movea.l	41*4(a2),a0
-	bra.s	.blitc
-.inconnu	movea.l	42*4(a2),a0 ; pointe sur du vide
-	
-.blitc	; Copie le caractäre dans le buffer
+	; Copie le caractäre dans le buffer
 	lea.l	scrollBuf,a1
+	; on a 2x10 longs Ö copier
 offset	SET	0
-	REPT	FONT_H
-	move.l	offset(a0),(a1)+
-	move.l	offset+4(a0),(a1)+
-offset	SET	offset+8	
+	REPT	2
+	movem.l	(a0)+,d0-d7/a2-a3 ; 10 longs
+	movem.l	d0-d7/a2-a3,offset(a1)
+offset	SET	offset+10*4
 	ENDR
 	rts		
 	
 	SECTION DATA
-scrollMessage	dc.b "ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789 .,-!'? CECI EST UN MESSAGE A SCROLLER ! BON C'EST PAS TOP MAIS C'EST MON PREMIER ECRAN !! MPS POWER !!   ",0
-
+scrollMessage	;dc.b "ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789 .,-!'? CECI EST UN MESSAGE A SCROLLER ! BON C'EST PAS TOP MAIS C'EST MON PREMIER ECRAN !! MPS POWER !!   ",0
+	INCBIN	message.bin
+	
 	EVEN
 scrollFont	INCBIN	font\fonte.bin
 
