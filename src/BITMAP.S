@@ -92,7 +92,7 @@ BmpPixelPutMono:
 	add.w	d2,d2
 	move.l	(a2,d2.w),-(sp)
 .fin	rts			; plus efficace qu'un jsr
-	include	f:\mps\src\bp4.s ; Routines de dessin de pixel, une par couleur et par pixel dans un ensemble de 16
+	include	..\src\bp4.s ; Routines de dessin de pixel, une par couleur et par pixel dans un ensemble de 16
 
 	IFNE	CLIPPING		; Support du clipping
 .x_out	addq.l	#2,a0		; Skip y
