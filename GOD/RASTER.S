@@ -1,31 +1,43 @@
 RasterInit
+	move.w	#16,rasterCouleur
+	move.w	#0,rasterLigne
+	move.w	#50,rasterDiviseur
+	rts
+	
 RasterDeinit
 	rts
 
 RasterAnimation
+	subi.w	#1,rasterDiviseur
+	bne.s	.fin
+	move.w	#50,rasterDiviseur
+			
+
 	; Initialisation
-	move.w	#16,.couleur
-	move.w	#-1,.ligne
+	; Efface ligne
+	clr.w	d1	; noir
+	move.w	rasterLigne,d0
+	bsr	LigneHorizontale
 	
-.boucle	move.w	.couleur,d1
+.boucle	move.w	rasterCouleur,d1
 	subq.w	#1,d1
 	bne.s	.colOk
 .resetCol	moveq.w	#15,d1
-.colOk	move.w	d1,.couleur
+.colOk	move.w	d1,rasterCouleur
 
-	move.w	.ligne,d0
+	move.w	rasterLigne,d0
 	addq.w	#1,d0
-	cmp.w	#YRES-100-1,d0
-	beq.s	.fin
-	move.w	d0,.ligne
+	cmpi.w	#10,d0
+	bne.s	.wrapl
+	clr.w	d0
+.wrapl	move.w	d0,rasterLigne
 
 	bsr	LigneHorizontale
-	bra.s	.boucle
 .fin	rts	
 	SECTION DATA
-.couleur	ds.w	1	
-.ligne	ds.w	1
-
+rasterCouleur	ds.w	1	
+rasterLigne	ds.w	1
+rasterDiviseur	ds.w	1
 	SECTION TEXT	
 LigneHorizontale
 	; Ligne horizontale traversant tout l'‚cran. On charge un chunk

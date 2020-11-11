@@ -10,11 +10,16 @@ AlienInit
 	move.w	#1,alienDx
 	move.w	#1,alienDy
 	move.w	#15,alienClr
+	
+	
+	
 AlienDeinit
 	rts
 
 
 AlienAnimation
+;	rts
+	
 ;	bsr	ScnVsync
 	; Efface l'ancienne position
 ;	bsr	EffaceEcran
@@ -74,14 +79,14 @@ alienDessine
 
 	SECTION DATA
 Alien	; Liste de points pour dessiner un alien
-	dc.w	2,0,8,0
-	dc.w	3,1,7,1
-	dc.w	2,2,3,2,4,2,5,2,6,2,7,2,8,2
-	dc.w	1,3,2,3,4,3,5,3,6,3,8,3,9,3
-	dc.w	0,4,1,4,2,4,3,4,4,4,5,4,6,4,7,4,8,4,9,4,10,4
-	dc.w	0,5,2,5,3,5,4,5,5,5,6,5,7,5,8,5,10,5
-	dc.w	0,6,2,6,8,6,10,6
-	dc.w	3,7,4,7,6,7,7,7
+	dc.w	2,0, 8,0
+	dc.w	3,1, 7,1
+	dc.w	2,2, 3,2, 4,2, 5,2, 6,2, 7,2, 8,2
+	dc.w	1,3, 2,3, 4,3, 5,3, 6,3, 8,3, 9,3
+	dc.w	0,4, 1,4, 2,4, 3,4, 4,4, 5,4, 6,4, 7,4, 8,4, 9,4, 10,4
+	dc.w	0,5, 2,5, 3,5, 4,5, 5,5, 6,5, 7,5, 8,5, 10,5
+	dc.w	0,6, 2,6, 8,6, 10,6
+	dc.w	3,7, 4,7, 6,7, 7,7
 	dc.w	-1
 
 	SECTION BSS
@@ -89,5 +94,5 @@ alienX	ds.w	1
 alienY	ds.w	1
 alienDx	ds.w	2
 alienDy	ds.w	2
-alienClr ds.w	1
+alienClr 	ds.w	1
 

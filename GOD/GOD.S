@@ -57,14 +57,13 @@ Main	move.l	sp,OldStack
 
 	clr.w	FlagQuitter
 BouclePrincipale
-;	Bconstat2
 	tst.w	FlagQuitter
 	bne.s	.quitte
 
-	bsr	RasterAnimation
-;	bsr	AlienAnimation
-	bsr	EliteAnimation
-	bsr	ScrollAnimation
+;	bsr	RasterAnimation
+	bsr	AlienAnimation
+;	bsr	EliteAnimation
+;	bsr	ScrollAnimation
 
 	bra.s	BouclePrincipale
 
