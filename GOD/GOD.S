@@ -61,9 +61,9 @@ BouclePrincipale
 	bne.s	.quitte
 
 ;	bsr	RasterAnimation
-	bsr	AlienAnimation
-;	bsr	EliteAnimation
-;	bsr	ScrollAnimation
+;	bsr	AlienAnimation
+	bsr	EliteAnimation
+	bsr	ScrollAnimation
 
 	bra.s	BouclePrincipale
 
