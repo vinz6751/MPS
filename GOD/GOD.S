@@ -1,4 +1,4 @@
-	OUTPUT 	f:\MPS\GOD\GOD.TOS
+	OUTPUT 	GOD.TOS
 
 	OPT	P=68000;
 ;	OPT	O+
@@ -49,7 +49,7 @@ Main	move.l	sp,OldStack
 	bsr	RasterInit
 	bsr	VblInstalle
 	bsr	MusiqueInit
-;	bsr	KbdInstalle
+	bsr	KbdInstalle
 	bsr	ScnEfface
 	bsr	AlienInit
 	bsr	EliteInit
@@ -57,8 +57,8 @@ Main	move.l	sp,OldStack
 
 	clr.w	FlagQuitter
 BouclePrincipale
-	Bconstat2
-;	tst.w	FlagQuitter
+;	Bconstat2
+	tst.w	FlagQuitter
 	bne.s	.quitte
 
 	bsr	RasterAnimation
@@ -72,7 +72,7 @@ BouclePrincipale
 	IFNE	DEBUG
 	bsr	ScrollDeinit
 ;	bsr	AlienDeinit
-;	bsr	KbdDesinstalle
+	bsr	KbdDesinstalle
 	bsr	VblDesinstalle
 	bsr	RasterDeinit
 	bsr	MusiqueDeinit
@@ -95,16 +95,8 @@ VblDesinstalle
 	rts
 	
 VblRoutine
-	jsr	ZicSnd+8 ; joue la musique
+	bsr	MusiqueAnimation
 	move.l	OldVbl,-(sp)
-	rts
-
-MusiqueInit
-	jsr	ZicSnd	; Init
-	rts
-	
-MusiqueDeinit
-	jsr	ZicSnd+4
 	rts
 
 KbdInstalle
@@ -135,12 +127,10 @@ KbdRoutine
 	INCLUDE blit.s		 ; Fonctions de 
 	INCLUDE scroll.s	 ; Scroll texte
 	INCLUDE raster.s
-	
-	SECTION DATA	
+	INCLUDE musique.s
 		
+	SECTION DATA	
 	EVEN
-
-ZicSnd	INCBIN	F:\MPS\GOD\ZICS\discored.snd   ;test_zxx.snd
 
 	SECTION BSS
 	EVEN
