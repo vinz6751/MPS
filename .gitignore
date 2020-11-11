@@ -4,3 +4,8 @@
 *.BAK
 *.prg
 *.PRG
+conversion-en*.sh
+EMUDESK.INF
+DESKTOP.INF
+NEWDESK.INF
+devpac*
