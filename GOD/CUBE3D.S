@@ -1,30 +1,18 @@
-Vsync	MACRO
-	move.w #37,-(sp)
-	trap   #14 ; Vsync
-	addq.l #2,sp
-	ENDM
-
-gemdos	EQU 1
-bios	EQU 13
-xbios	EQU 14
-
-pterm	EQU $4C
-
-bconstat	EQU 1
-bconin	EQU 2
-crawcin	EQU 7
-
-CLAVIER	EQU 2
-
-* D‚but
 CUBE3D_DEBUG	EQU 1
 
 	IFNE   CUBE3D_DEBUG
 ******************** DEBUG *******************
+
+bconstat	EQU 1
+bconin	EQU 2
+crawcin	EQU 7
+CLAVIER	EQU 2
+
 	pea    cube_main
 	move.w	#38,-(sp)
-	trap	#14
+	trap	#14 ; Supexec
 	addq.l	#6,sp
+
 	clr.w	-(sp)
 	trap	#1
 	
@@ -45,13 +33,12 @@ cube_main
 	move.l	ScnFb,BmpFb
 	bsr	ScnEfface
 
-
 	bsr    Cube3dInit
 	
 
 .boucle	move.w #CLAVIER,-(sp)      
 	move.w #bconstat,-(sp) ;touche appuy‚e ?
-	trap   #bios               
+	trap   #13               
 	addq.l #4,sp
 	tst.w  d0                  
 
@@ -68,8 +55,40 @@ cube_main
 ********** FIN DU PROG DE DEBUG ***************
 	
 Cube3dInit:	
-	move.w #160,xcenter
-	move.w #100,ycenter
+	lea    cube1,a0
+	lea    cubepts,a1	  ;Liste des points
+	lea    cubelignes,a2  ;Liste des lignes
+	lea    cube1ptsbuf,a3 ;Buffer de coordonn‚es anciennes de points (x.w,y.w,z.w)
+	move.w cubenpts,d1    ;Nombre-1 de points dans la liste de points
+	move.w cubenlignes,d2 ;Nombre-1 de lignes dans la liste de lignes
+	
+	bsr    init_cube
+
+	lea    cube1,a0
+	move.l #$00010001,c_xspeed(a0)
+	move.w #$0001,c_zspeed(a0)
+	rts
+	
+init_cube:
+	move.w #160,c_xcenter(a0)
+	move.w #100,c_ycenter(a0)
+	clr.w  c_x_alpha(a0)
+	clr.w  c_y_beta(a0)
+	clr.w  c_z_gamma(a0)
+	clr.w  c_xspeed(a0)
+	clr.w  c_yspeed(a0)
+	clr.w  c_zspeed(a0)
+	move.l a1,c_points(a0)
+	move.l a2,c_lignes(a0)
+	move.l a3,c_oldpts(a0)
+	move.w d2,c_nlignes(a0)
+	move.w d1,c_npoints(a0)
+	addq.w #1,d1	    ; c_npoint est le nombre de point -1
+	mulu.w #3*2,d1
+	adda.w d1,a3
+	move.l a3,c_newpts(a0)
+	rts	
+	
 	rts
 
 Cube3dDeinit:
@@ -77,32 +96,34 @@ Cube3dDeinit:
 
 
 Cube3dAnimation:
+	lea    cube1,a6
+	bsr    anime_cube
+	rts
 
-TCUBE	EQU 15 ;Taille du cube
-NPOINTS	EQU 18 ;Nb de points
-NLIGNES	EQU 12 ;Nb de lignes
- 
+anime_cube:
+	; Anime le cube en a6
+	
 	; Vitesse de rotation
-	move.w xspeed(pc),d3 ;Vitesses de rotation en x, y et z
-	move.w yspeed(pc),d4 ;...
-	move.w zspeed(pc),d5 ;...
+	move.w c_xspeed(a6),d3 ;Vitesses de rotation en x, y et z
+	move.w c_yspeed(a6),d4 ;...
+	move.w c_zspeed(a6),d5 ;...
 
 	; M…j des angles de rotation
 	move.w #$00ff,d0
-	add.w  d3,x_alpha
-	and.w  d0,x_alpha
-	add.w  d4,y_beta
-	and.w  d0,y_beta
-	add.w  d5,z_gamma
-	and.w  d0,z_gamma
+	add.w  d3,c_x_alpha(a6)
+	and.w  d0,c_x_alpha(a6)
+	add.w  d4,c_y_beta(a6)
+	and.w  d0,c_y_beta(a6)
+	add.w  d5,c_z_gamma(a6)
+	and.w  d0,c_z_gamma(a6)
 
 	* Traitement rotation
-	lea    sinus_tab(pc),a0 ;Adresse de la table des sinus
-	lea    xyz(pc),a1       ;Coordonn‚es courantes
-	lea    newxyz(pc),a2    ;DerniŠre position trac‚e
-	lea    oldxyz(pc),a3    ;Prochaine position … tracer
+	lea     sinus_tab(pc),a0 ;Adresse de la table des sinus
+	movea.l c_points(a6),a1 ;Coordonn‚es courantes
+	movea.l c_newpts(a6),a2 ;Prochaine position … tracer
+	movea.l c_oldpts(a6),a3 ;DerniŠre position trac‚e
+	move.w c_npoints(a6),d5  ;Nombre de points … traiter
 
-	move.w (a1)+,d5         ;Nombre de points … traiter
 calcul	move.w (a1)+,d0         ;x suivant
 	move.w (a1)+,d1         ;y suivant
 	move.w (a1)+,d2         ;z suivant
@@ -111,7 +132,7 @@ calcul	move.w (a1)+,d0         ;x suivant
 	move.w 4(a2),(a3)+
 
 	;Rotation sur l'axe des X (m…j Y et Z)
-xrotate	move.w x_alpha,d7       ;Lecture angle de rotation (0-360)
+xrotate	move.w c_x_alpha(a6),d7 ;Lecture angle de rotation (0-360)
 	move.b (a0,d7.w),d6     ;Lecture sin(alpha)
 	move.b 64(a0,d7.w),d7   ;lecture cos(alpha)
 	ext.w  d6               ;Extension sur 16 bits
@@ -128,7 +149,7 @@ xrotate	move.w x_alpha,d7       ;Lecture angle de rotation (0-360)
 	asr.w  #7,d2            ;Mise … jour de z --> d2
 
 	;Rotation sur l'axe Y (m…j X et Z)
-yrotate	move.w y_beta,d7        ;Lecture angle de rotation (0-360)
+yrotate	move.w c_y_beta(a6),d7  ;Lecture angle de rotation (0-360)
 	move.b 0(a0,d7.w),d6    ;Lecture sin(beta)
 	move.b 64(a0,d7.w),d7   ;Lecture cos(beta)
 	ext.w  d6               ;Extension de signe
@@ -145,7 +166,7 @@ yrotate	move.w y_beta,d7        ;Lecture angle de rotation (0-360)
 	asr.w  #7,d2            ;Mise … jour de z --> d2
 
 	;Rotation sur l'axe Z (m…j X et Y)
-zrotate	move.w z_gamma,d7       ;Lecture angle de rotation (0-360)
+zrotate	move.w c_z_gamma(a6),d7 ;Lecture angle de rotation (0-360)
 	move.b (a0,d7.w),d6     ;Lecture sin(gamma)
 	move.b 64(a0,d7.w),d7   ;Lecture cos(gamma)
 	ext.w  d6               ;Extension de signe
@@ -161,65 +182,77 @@ zrotate	move.w z_gamma,d7       ;Lecture angle de rotation (0-360)
 	add.w  d3,d1            ;Calcul x.sin(gamma) + y.cos(gamma)
 	asr.w  #7,d1            ;Mise … jour de y --> d1
 
-	add.w  xcenter,d0       ;Offset de centre d'‚cran
-	add.w  ycenter,d1       ;idem en vertical
+	add.w  c_xcenter(a6),d0 ;Offset de centre d'‚cran
+	add.w  c_ycenter(a6),d1 ;idem en vertical
 
 update	move.w d0,(a2)+         ;Copie des nouvelles coordonn‚es
 	move.w d1,(a2)+           
 	move.w d2,(a2)+           
 
-	dbra    d5,calcul	    ;Calcul pour tous les points...
+	dbra   d5,calcul	    ;Calcul pour tous les points...
 
 
 clear    	;Efface la figure
-	lea     oldxyz,a3          ;Nouvelles coordonn‚es
-          lea     line_list,a4       ;D‚but de la liste de lignes
-	lea     linebuf,a0
+	move.l  c_oldpts(a6),a3    ;Nouvelles coordonn‚es
+          lea     c_nlignes(a6),a4   ;D‚but de la liste de lignes
+	lea     linebuf(pc),a0
 	clr.w   d0	       ;Couleur du fond
           move.w  (a4)+,d4           ;Nombre-1 de lignes … tracer
+          movea.l (a4),a4	       ;Indirection liste de lignes
 .drawlp  	move.w  (a4)+,d5           ;Lecture no de point d‚but
           move.l  (a3,d5.w),(a0)     ;Fixe x1 et y1
           move.w  (a4)+,d5           ;Lecture no de point fin
           move.l  (a3,d5.w),4(a0)    ;Fixe x2 et y2
-          movem.l d0/d4/a0/a3/a4,-(sp)  ;Gestion de la boucle
+          movem.l d0/d4/a0/a3/a4/a6,-(sp)  ;Gestion de la boucle
           jsr     BmpLine            ;Trace la ligne...
-          movem.l (sp)+,d0/d4/a0/a3/a4
+          movem.l (sp)+,d0/d4/a0/a3/a4/a6
           dbra    d4,.drawlp
 
 draw    	;Dessine la figure
-	lea     newxyz,a3          ;Nouvelles coordonn‚es
-          lea     line_list,a4       ;D‚but de la liste de lignes
-	lea     linebuf,a0
+	movea.l c_newpts(a6),a3    ;Nouvelles coordonn‚es
+          lea     c_nlignes(a6),a4   ;D‚but de la liste de lignes
+	lea     linebuf(pc),a0
 	moveq   #2,d0
           move.w  (a4)+,d4           ;Nombre-1 de lignes … tracer
+	movea.l (a4),a4	       ;Indirection liste de lignes
 .drawlp  	move.w  (a4)+,d5           ;Lecture no de point d‚but
           move.l  (a3,d5.w),(a0)     ;Fixe x1 et y1
           move.w  (a4)+,d5           ;Lecture no de point fin
           move.l  (a3,d5.w),4(a0)    ;Fixe x2 et y2
-          movem.l d0/d4/a0/a3/a4,-(sp)  ;Gestion de la boucle
+          movem.l d0/d4/a0/a3/a4/a6,-(sp)  ;Gestion de la boucle
           jsr     BmpLine            ;Trace la ligne...
-          movem.l (sp)+,d0/d4/a0/a3/a4
+          movem.l (sp)+,d0/d4/a0/a3/a4/a6
           dbra    d4,.drawlp
 
           rts
 
 	SECTION   DATA
-fillptr   dc.w -1 ;Motif de remplissage (noir)
+; ------- D‚finition d'une figure ------
+	rsreset
+c_xcenter	rs.w 1  ;X centre
+c_ycenter	rs.w 1  ;Y centre
+c_x_alpha rs.w 1  ;Angle axe X
+c_y_beta  rs.w 1  ;Angle axe Y
+c_z_gamma rs.w 1  ;Angle axe Z
+c_zspeed  rs.w 1  ;Vitesse en X
+c_xspeed  rs.w 1  ;Vitesse en Y
+c_yspeed  rs.w 1  ;Vitesse en Z
+c_oldpts	rs.l 1  ;Pointeur vers tableau des anciens points
+c_newpts	rs.l 1  ;Pointeur vers tableau des anciens pints
+c_npoints rs.w 1  ;Nombre de points -1 composant l'objet
+c_points  rs.l 1  ;Pointeur vers tableau de points (x.w,y.w,z.w)
+c_nlignes rs.w 1  ;Nombre de lignes -1 reliant les points
+c_lignes  rs.l 1  ;Pointeur vers tableau de paires d'index de points … relier
+c_sizeof	rs.b 1
 
-x_alpha   dc.w 0 ;Angle axe X
-y_beta    dc.w 0 ;Angle axe Y
-z_gamma   dc.w 0 ;Angle axe Z
-
-zspeed    dc.w 2 ;Vitesse en X
-xspeed    dc.w 2 ;Vitesse en Y
-yspeed    dc.w 2 ;Vitesse en Z
 
 * D‚finition de l'image 3D … traiter: 
-* nombre de points.w
-* liste de points (3*w par point)
+TCUBE	EQU 15 ;Taille du cube
+NPOINTS	EQU 18 ;Nb de points
+NLIGNES	EQU 12 ;Nb de lignes
 
-xyz       dc.w NPOINTS-1 ;Nombre-1 de points … traiter
-	dc.w -TCUBE,-TCUBE,-TCUBE        point 0
+cubenpts  dc.w NPOINTS-1 ;Nombre-1 de points … traiter
+cubepts	dc.w -TCUBE,-TCUBE,-TCUBE        point 0
           dc.w TCUBE,-TCUBE,-TCUBE         point 1
           dc.w TCUBE,TCUBE,-TCUBE          point 2
           dc.w -TCUBE,TCUBE,-TCUBE         ...
@@ -227,10 +260,9 @@ xyz       dc.w NPOINTS-1 ;Nombre-1 de points … traiter
           dc.w TCUBE,-TCUBE,TCUBE
           dc.w TCUBE,TCUBE,TCUBE
           dc.w -TCUBE,TCUBE,TCUBE
-* Table de tracage des lignes
-* offset point de depart, offset point d'arriv‚e
-line_list dc.w  12-1 ;Nombre-1 de lignes … tracer
- 	dc.w  0*6,1*6 Joindre point 0 … 1
+cubenlignes dc.w  12-1 ;Nombre-1 de lignes … tracer
+cubelignes ; Table de tracage des lignes: offset point de depart, offset point d'arriv‚e
+	dc.w  0*6,1*6 Joindre point 0 … 1
 	dc.w  1*6,2*6 ;1 … 2
 	dc.w  2*6,3*6 ;2 … 3
 	dc.w  3*6,0*6 ;3 … 0
@@ -290,11 +322,11 @@ cosinus	dc.b  $00,$03,$06,$09,$0C,$0F,$12,$15   0 … 10 degr‚s
 	dc.b  $75,$76,$77,$78,$79,$7A,$7B,$7B   
 	dc.b  $7C,$7D,$7D,$7E,$7E,$7E,$7E,$7E   80 … 90 degr‚s
 
-	SECTION   BSS
-xcenter	ds.w  160	      ;R‚f‚rence X de la figure
-ycenter	ds.w  100	      ;R‚f‚rence Y de la figure
-oldxyz	ds.w  NPOINTS*3 ;Anciennes coordonn‚es     
-newxyz	ds.w  NPOINTS*3 ;Nouvelles coordonn‚es  
-linebuf	ds.w  4         ;x1,y1,x2,y2 pour BmpLine
+	  SECTION BSS
+linebuf	  ds.w  4         ;x1,y1,x2,y2 pour BmpLine
+cube1	  ds.b  c_sizeof
+cube1ptsbuf ds.w  NPOINTS*3*2
+
+
 ; pour le debug
 fb	ds.b  32000+256
