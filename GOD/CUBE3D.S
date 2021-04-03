@@ -240,25 +240,22 @@ update	move.w d0,(a2)+         ;Copie des nouvelles coordonn‚es
 
 clear    	;Efface la figure
 	move.l  c_oldpts(a6),a3    ;Nouvelles coordonn‚es
-          lea     c_nlignes(a6),a4   ;D‚but de la liste de lignes
-	lea     linebuf(pc),a0
 	clr.w   d0	       ;Couleur du fond
-          move.w  (a4)+,d4           ;Nombre-1 de lignes … tracer
-          movea.l (a4),a4	       ;Indirection liste de lignes
-.drawlp  	move.w  (a4)+,d5           ;Lecture no de point d‚but
-          move.l  (a3,d5.w),(a0)     ;Fixe x1 et y1
-          move.w  (a4)+,d5           ;Lecture no de point fin
-          move.l  (a3,d5.w),4(a0)    ;Fixe x2 et y2
-          movem.l d0/d4/a0/a3/a4/a6,-(sp)  ;Gestion de la boucle
-          jsr     BmpLine            ;Trace la ligne...
-          movem.l (sp)+,d0/d4/a0/a3/a4/a6
-          dbra    d4,.drawlp
+	bsr     model_draw
 
 draw    	;Dessine la figure
 	movea.l c_newpts(a6),a3    ;Nouvelles coordonn‚es
+	lea     linebuf(pc),a0
+	move.w  c_couleur(a6),d0
+	bsr     model_draw
+          rts
+
+model_draw
+	; Dessine le modŠle en a6
+	; a3: est la liste de points … utiliser pour le rendu
+	; d0: num‚ro de couleur
           lea     c_nlignes(a6),a4   ;D‚but de la liste de lignes
 	lea     linebuf(pc),a0
-	move.w   c_couleur(a6),d0
           move.w  (a4)+,d4           ;Nombre-1 de lignes … tracer
 	movea.l (a4),a4	       ;Indirection liste de lignes
 .drawlp  	move.w  (a4)+,d5           ;Lecture no de point d‚but
@@ -269,9 +266,9 @@ draw    	;Dessine la figure
           jsr     BmpLine            ;Trace la ligne...
           movem.l (sp)+,d0/d4/a0/a3/a4/a6
           dbra    d4,.drawlp
-
           rts
-
+	
+	
 	SECTION   DATA
 ; ------- D‚finition d'une figure ------
 	rsreset
