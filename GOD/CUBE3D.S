@@ -8,7 +8,7 @@ bconin	EQU 2
 crawcin	EQU 7
 CLAVIER	EQU 2
 
-	pea    cube_main
+	pea    	cube_main
 	move.w	#38,-(sp)
 	trap	#14 ; Supexec
 	addq.l	#6,sp
@@ -23,14 +23,14 @@ CLAVIER	EQU 2
 cube_main
 	move.l	#fb,ScnFb
 	
-	bsr	ScnInit
-	bsr	BmpInit
+	bsr	ScnInit ;Initialise le module de gestion d'‚cran
+	bsr	BmpInit ;Initialise les routines de bitmap
 		
-	moveq	#0,d0
+	moveq	#0,d0 ; Passe en ST Basse et d‚finit m‚moire vid‚o
 	lea	fb,a0
 	bsr	ScnSet
 
-	move.l	ScnFb,BmpFb
+	move.l	ScnFb,BmpFb ;Efface l'‚cran
 	bsr	ScnEfface
 
 	bsr    Cube3dInit
@@ -42,31 +42,67 @@ cube_main
 	addq.l #4,sp
 	tst.w  d0                  
 
-	bne.s  .fin
+	bne.s  fin
 	bsr    Cube3dAnimation              
 	bra.s  .boucle
 	
-.fin	bsr    Cube3dDeinit
+fin	bsr    Cube3dDeinit
 	bsr    BmpDeinit
+	bsr    ScnRestore
 	bsr    ScnDeinit
 	rts
 	SECTION TEXT
 	ENDC
 ********** FIN DU PROG DE DEBUG ***************
 	
-Cube3dInit:	
+Cube3dInit:
+	; Initialisation cube 1	
 	lea    cube1,a0
-	lea    cubepts,a1	  ;Liste des points
-	lea    cubelignes,a2  ;Liste des lignes
-	lea    cube1ptsbuf,a3 ;Buffer de coordonn‚es anciennes de points (x.w,y.w,z.w)
-	move.w cubenpts,d1    ;Nombre-1 de points dans la liste de points
-	move.w cubenlignes,d2 ;Nombre-1 de lignes dans la liste de lignes
-	
+	lea    cube_model,a1
 	bsr    init_cube
-
 	lea    cube1,a0
-	move.l #$00010001,c_xspeed(a0)
-	move.w #$0001,c_zspeed(a0)
+	move.w #320/3,c_xcenter(a0)
+	move.w #200/3,c_ycenter(a0)
+	move.l #$00040003,c_xspeed(a0)
+	move.w #$0004,c_zspeed(a0)
+	move.w #1,c_couleur(a0)
+
+	IFNE 1
+	; Initialisation cube 2	
+	lea    cube2,a0
+	lea    cube_model,a1
+	bsr    init_cube
+	lea    cube2,a0
+	move.w #320*2/3,c_xcenter(a0)
+	move.w #200/3,c_ycenter(a0)
+	move.l #$00040003,c_xspeed(a0)
+	move.w #$0003,c_zspeed(a0)
+	move.w #2,c_couleur(a0)
+
+	; Initialisation cube 3	
+	lea    cube3,a0
+	lea    cube_model,a1
+	bsr    init_cube
+	lea    cube3,a0
+	move.w #320/3,c_xcenter(a0)
+	move.w #200*2/3,c_ycenter(a0)
+	move.l #$00030003,c_xspeed(a0)
+	move.w #$0003,c_zspeed(a0)
+	move.w #3,c_couleur(a0)
+
+	; Initialisation cube 4	
+	lea    cube4,a0
+	lea    cube_model,a1
+	bsr    init_cube
+	lea    cube4,a0
+	move.w #320*2/3,c_xcenter(a0)
+	move.w #200*2/3,c_ycenter(a0)
+	move.l #$00020003,c_xspeed(a0)
+	move.w #$0004,c_zspeed(a0)
+	move.w #4,c_couleur(a0)
+
+	ENDC
+	
 	rts
 	
 init_cube:
@@ -78,16 +114,20 @@ init_cube:
 	clr.w  c_xspeed(a0)
 	clr.w  c_yspeed(a0)
 	clr.w  c_zspeed(a0)
-	move.l a1,c_points(a0)
-	move.l a2,c_lignes(a0)
-	move.l a3,c_oldpts(a0)
-	move.w d2,c_nlignes(a0)
+	move.w #1,c_couleur(a0) ;Couleur par d‚faut
+	
+	lea    c_sizeof(a0),a6
+	move.l a6,c_oldpts(a0) ;tableau des anciennes coordonn‚es des points
+	move.w model_npoints(a1),d1
 	move.w d1,c_npoints(a0)
-	addq.w #1,d1	    ; c_npoint est le nombre de point -1
+	addq.w #1,d1	   ; c_npoint est le nombre de point -1
 	mulu.w #3*2,d1
-	adda.w d1,a3
-	move.l a3,c_newpts(a0)
-	rts	
+	adda.w d1,a6
+	move.l a6,c_newpts(a0) ;le tableau des nouvelles coordonn‚es suit celui des anciennes
+
+	move.l model_points(a1),c_points(a0)
+	move.w model_nlignes(a1),c_nlignes(a0)
+	move.l model_lignes(a1),c_lignes(a0)
 	
 	rts
 
@@ -97,6 +137,12 @@ Cube3dDeinit:
 
 Cube3dAnimation:
 	lea    cube1,a6
+	bsr    anime_cube
+	lea    cube2,a6
+	bsr    anime_cube
+	lea    cube3,a6
+	bsr    anime_cube
+	lea    cube4,a6
 	bsr    anime_cube
 	rts
 
@@ -212,7 +258,7 @@ draw    	;Dessine la figure
 	movea.l c_newpts(a6),a3    ;Nouvelles coordonn‚es
           lea     c_nlignes(a6),a4   ;D‚but de la liste de lignes
 	lea     linebuf(pc),a0
-	moveq   #2,d0
+	move.w   c_couleur(a6),d0
           move.w  (a4)+,d4           ;Nombre-1 de lignes … tracer
 	movea.l (a4),a4	       ;Indirection liste de lignes
 .drawlp  	move.w  (a4)+,d5           ;Lecture no de point d‚but
@@ -231,6 +277,7 @@ draw    	;Dessine la figure
 	rsreset
 c_xcenter	rs.w 1  ;X centre
 c_ycenter	rs.w 1  ;Y centre
+c_couleur	rs.w 1  ;No de couleur
 c_x_alpha rs.w 1  ;Angle axe X
 c_y_beta  rs.w 1  ;Angle axe Y
 c_z_gamma rs.w 1  ;Angle axe Z
@@ -238,21 +285,31 @@ c_zspeed  rs.w 1  ;Vitesse en X
 c_xspeed  rs.w 1  ;Vitesse en Y
 c_yspeed  rs.w 1  ;Vitesse en Z
 c_oldpts	rs.l 1  ;Pointeur vers tableau des anciens points
-c_newpts	rs.l 1  ;Pointeur vers tableau des anciens pints
+c_newpts	rs.l 1  ;Pointeur vers tableau des anciens points
+;ModŠle
 c_npoints rs.w 1  ;Nombre de points -1 composant l'objet
 c_points  rs.l 1  ;Pointeur vers tableau de points (x.w,y.w,z.w)
 c_nlignes rs.w 1  ;Nombre de lignes -1 reliant les points
 c_lignes  rs.l 1  ;Pointeur vers tableau de paires d'index de points … relier
 c_sizeof	rs.b 1
 
+* D‚finition d'un modŠle 3D 
+	rsreset
+model_npoints rs.w 1 ;nombre de points
+model_points  rs.l 1 ;pointeur vers tableau de points
+model_nlignes rs.w 1 ;nombre de lignes
+model_lignes  rs.l 1 ;ponteur vers tableau de lignes
 
-* D‚finition de l'image 3D … traiter: 
-TCUBE	EQU 15 ;Taille du cube
-NPOINTS	EQU 18 ;Nb de points
-NLIGNES	EQU 12 ;Nb de lignes
-
-cubenpts  dc.w NPOINTS-1 ;Nombre-1 de points … traiter
-cubepts	dc.w -TCUBE,-TCUBE,-TCUBE        point 0
+* ModŠle 3D de cube
+cube_model 
+TCUBE	EQU 15 	;Taille des cot‚s du cube
+NPOINTS	EQU 8 	;Nb de points
+NLIGNES	EQU 12 	;Nb de lignes
+.model:	dc.w NPOINTS-1
+	dc.l .points
+	dc.w NLIGNES-1
+	dc.l .lignes
+.points	dc.w -TCUBE,-TCUBE,-TCUBE        point 0
           dc.w TCUBE,-TCUBE,-TCUBE         point 1
           dc.w TCUBE,TCUBE,-TCUBE          point 2
           dc.w -TCUBE,TCUBE,-TCUBE         ...
@@ -260,8 +317,7 @@ cubepts	dc.w -TCUBE,-TCUBE,-TCUBE        point 0
           dc.w TCUBE,-TCUBE,TCUBE
           dc.w TCUBE,TCUBE,TCUBE
           dc.w -TCUBE,TCUBE,TCUBE
-cubenlignes dc.w  12-1 ;Nombre-1 de lignes … tracer
-cubelignes ; Table de tracage des lignes: offset point de depart, offset point d'arriv‚e
+.lignes   ; Table de tracage des lignes: offset point de depart, offset point d'arriv‚e
 	dc.w  0*6,1*6 Joindre point 0 … 1
 	dc.w  1*6,2*6 ;1 … 2
 	dc.w  2*6,3*6 ;2 … 3
@@ -322,10 +378,25 @@ cosinus	dc.b  $00,$03,$06,$09,$0C,$0F,$12,$15   0 … 10 degr‚s
 	dc.b  $75,$76,$77,$78,$79,$7A,$7B,$7B   
 	dc.b  $7C,$7D,$7D,$7E,$7E,$7E,$7E,$7E   80 … 90 degr‚s
 
+	EVEN
+
+cubes	dc.l  cube1,cube2,cube3,cube4
+
 	  SECTION BSS
 linebuf	  ds.w  4         ;x1,y1,x2,y2 pour BmpLine
+
 cube1	  ds.b  c_sizeof
+	EVEN
 cube1ptsbuf ds.w  NPOINTS*3*2
+
+cube2	  ds.b  c_sizeof
+cube2ptsbuf ds.w  NPOINTS*3*2
+
+cube3	  ds.b  c_sizeof
+cube3ptsbuf ds.w  NPOINTS*3*2
+
+cube4	  ds.b  c_sizeof
+cube4ptsbuf ds.w  NPOINTS*3*2
 
 
 ; pour le debug
