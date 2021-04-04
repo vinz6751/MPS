@@ -1,4 +1,4 @@
-CUBE3D_DEBUG	EQU 1
+CUBE3D_DEBUG	EQU 0
 
 	IFNE   CUBE3D_DEBUG
 ******************** DEBUG *******************
@@ -56,50 +56,57 @@ fin	bsr    Cube3dDeinit
 ********** FIN DU PROG DE DEBUG ***************
 	
 Cube3dInit:
+	;
+	move.w #1,cube3d_limiteur
+
 	; Initialisation cube 1	
 	lea    cube1,a0
 	lea    cube_model,a1
 	bsr    init_cube
 	lea    cube1,a0
-	move.w #96,c_xcenter(a0)
+	move.w #32,c_xcenter(a0)
 	move.w #200/3,c_ycenter(a0)
 	move.l #$00040003,c_xspeed(a0)
 	move.w #$0004,c_zspeed(a0)
 	move.w #1,c_couleur(a0)
-
+	move.w #1,c_efface(a0)
+	
 	IFNE 1
 	; Initialisation cube 2	
 	lea    cube2,a0
 	lea    cube_model,a1
 	bsr    init_cube
 	lea    cube2,a0
-	move.w #192,c_xcenter(a0)
-	move.w #200/3,c_ycenter(a0)
+	move.w #146,c_xcenter(a0)
+	move.w #100,c_ycenter(a0)
 	move.l #$00040003,c_xspeed(a0)
 	move.w #$0003,c_zspeed(a0)
 	move.w #2,c_couleur(a0)
+	move.w #-1,c_efface(a0)
 
 	; Initialisation cube 3	
 	lea    cube3,a0
 	lea    cube_model,a1
 	bsr    init_cube
 	lea    cube3,a0
-	move.w #96,c_xcenter(a0)
-	move.w #200*2/3,c_ycenter(a0)
+	move.w #80,c_xcenter(a0)
+	move.w #100,c_ycenter(a0)
 	move.l #$00030003,c_xspeed(a0)
 	move.w #$0003,c_zspeed(a0)
-	move.w #3,c_couleur(a0)
+	move.w #7,c_couleur(a0)
+	move.w #0,c_efface(a0)
 
 	; Initialisation cube 4	
 	lea    cube4,a0
 	lea    cube_model,a1
 	bsr    init_cube
 	lea    cube4,a0
-	move.w #192,c_xcenter(a0)
-	move.w #200*2/3,c_ycenter(a0)
+	move.w #208,c_xcenter(a0)
+	move.w #100,c_ycenter(a0)
 	move.l #$00020003,c_xspeed(a0)
 	move.w #$0004,c_zspeed(a0)
-	move.w #4,c_couleur(a0)
+	move.w #8,c_couleur(a0)
+	move.w #1,c_efface(a0)
 
 	ENDC
 	
@@ -136,7 +143,16 @@ Cube3dDeinit:
 
 
 Cube3dAnimation:
+	subq.w #1,cube3d_limiteur
+	bne.s  .fin
+	move.w #10,cube3d_limiteur
+
+
+	clr.b  cube3d_limiteur
 	lea    cube1,a6
+	move.w Elite_ye2,d2
+	addi.w  #10,d2
+	move.w d2,c_ycenter(a6)
 	bsr    anime_cube
 	lea    cube2,a6
 	bsr    anime_cube
@@ -144,7 +160,7 @@ Cube3dAnimation:
 	bsr    anime_cube
 	lea    cube4,a6
 	bsr    anime_cube
-	rts
+.fin	rts
 
 anime_cube:
 	; Anime le cube en a6
@@ -170,7 +186,7 @@ anime_cube:
 	movea.l c_oldpts(a6),a3 ;DerniŠre position trac‚e
 	move.w c_npoints(a6),d5  ;Nombre de points … traiter
 
-calcul	move.w (a1)+,d0         ;x suivant
+.calcul	move.w (a1)+,d0         ;x suivant
 	move.w (a1)+,d1         ;y suivant
 	move.w (a1)+,d2         ;z suivant
 
@@ -178,7 +194,7 @@ calcul	move.w (a1)+,d0         ;x suivant
 	move.w 4(a2),(a3)+
 
 	;Rotation sur l'axe des X (m…j Y et Z)
-xrotate	move.w c_x_alpha(a6),d7 ;Lecture angle de rotation (0-360)
+.xrotate	move.w c_x_alpha(a6),d7 ;Lecture angle de rotation (0-360)
 	move.b (a0,d7.w),d6     ;Lecture sin(alpha)
 	move.b 64(a0,d7.w),d7   ;lecture cos(alpha)
 	ext.w  d6               ;Extension sur 16 bits
@@ -195,7 +211,7 @@ xrotate	move.w c_x_alpha(a6),d7 ;Lecture angle de rotation (0-360)
 	asr.w  #7,d2            ;Mise … jour de z --> d2
 
 	;Rotation sur l'axe Y (m…j X et Z)
-yrotate	move.w c_y_beta(a6),d7  ;Lecture angle de rotation (0-360)
+.yrotate	move.w c_y_beta(a6),d7  ;Lecture angle de rotation (0-360)
 	move.b 0(a0,d7.w),d6    ;Lecture sin(beta)
 	move.b 64(a0,d7.w),d7   ;Lecture cos(beta)
 	ext.w  d6               ;Extension de signe
@@ -212,7 +228,7 @@ yrotate	move.w c_y_beta(a6),d7  ;Lecture angle de rotation (0-360)
 	asr.w  #7,d2            ;Mise … jour de z --> d2
 
 	;Rotation sur l'axe Z (m…j X et Y)
-zrotate	move.w c_z_gamma(a6),d7 ;Lecture angle de rotation (0-360)
+.zrotate	move.w c_z_gamma(a6),d7 ;Lecture angle de rotation (0-360)
 	move.b (a0,d7.w),d6     ;Lecture sin(gamma)
 	move.b 64(a0,d7.w),d7   ;Lecture cos(gamma)
 	ext.w  d6               ;Extension de signe
@@ -231,20 +247,22 @@ zrotate	move.w c_z_gamma(a6),d7 ;Lecture angle de rotation (0-360)
 	add.w  c_xcenter(a6),d0 ;Offset de centre d'‚cran
 	add.w  c_ycenter(a6),d1 ;idem en vertical
 
-update	move.w d0,(a2)+         ;Copie des nouvelles coordonn‚es
+.update	move.w d0,(a2)+         ;Copie des nouvelles coordonn‚es
 	move.w d1,(a2)+           
 	move.w d2,(a2)+           
 
-	dbra   d5,calcul	    ;Calcul pour tous les points...
+	dbra   d5,.calcul	    ;Calcul pour tous les points...
 
 
-clear    	;Efface la figure
+.clear    	;Efface la figure
+	tst.w   c_efface(a6)
+	beq.s   .draw
 	bsr     efface
 ;	move.l  c_oldpts(a6),a3    ;Nouvelles coordonn‚es
 ;	clr.w   d0	       ;Couleur du fond
 ;	bsr     model_draw
 
-draw    	;Dessine la figure
+.draw    	;Dessine la figure
 	movea.l c_newpts(a6),a3    ;Nouvelles coordonn‚es
 	lea     linebuf(pc),a0
 	move.w  c_couleur(a6),d0
@@ -316,6 +334,7 @@ efface	;Efface la figure en a6
 c_xcenter	rs.w 1  ;X centre
 c_ycenter	rs.w 1  ;Y centre
 c_couleur	rs.w 1  ;No de couleur
+c_efface  rs.w 1  ;Indique s'il faut effacer ou pas avant de dessiner
 c_x_alpha rs.w 1  ;Angle axe X
 c_y_beta  rs.w 1  ;Angle axe Y
 c_z_gamma rs.w 1  ;Angle axe Z
@@ -434,8 +453,12 @@ cube3	  ds.b  c_sizeof
 cube3ptsbuf ds.w  NPOINTS*3*2
 
 cube4	  ds.b  c_sizeof
+	EVEN
 cube4ptsbuf ds.w  NPOINTS*3*2
 
+cube3d_limiteur ds.w 1 
 
+	IFNE CUBE3D_DEBUG
 ; pour le debug
 fb	ds.b  32000+256
+	ENDC
