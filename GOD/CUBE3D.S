@@ -61,7 +61,7 @@ Cube3dInit:
 	lea    cube_model,a1
 	bsr    init_cube
 	lea    cube1,a0
-	move.w #320/3,c_xcenter(a0)
+	move.w #96,c_xcenter(a0)
 	move.w #200/3,c_ycenter(a0)
 	move.l #$00040003,c_xspeed(a0)
 	move.w #$0004,c_zspeed(a0)
@@ -73,7 +73,7 @@ Cube3dInit:
 	lea    cube_model,a1
 	bsr    init_cube
 	lea    cube2,a0
-	move.w #320*2/3,c_xcenter(a0)
+	move.w #192,c_xcenter(a0)
 	move.w #200/3,c_ycenter(a0)
 	move.l #$00040003,c_xspeed(a0)
 	move.w #$0003,c_zspeed(a0)
@@ -84,7 +84,7 @@ Cube3dInit:
 	lea    cube_model,a1
 	bsr    init_cube
 	lea    cube3,a0
-	move.w #320/3,c_xcenter(a0)
+	move.w #96,c_xcenter(a0)
 	move.w #200*2/3,c_ycenter(a0)
 	move.l #$00030003,c_xspeed(a0)
 	move.w #$0003,c_zspeed(a0)
@@ -95,7 +95,7 @@ Cube3dInit:
 	lea    cube_model,a1
 	bsr    init_cube
 	lea    cube4,a0
-	move.w #320*2/3,c_xcenter(a0)
+	move.w #192,c_xcenter(a0)
 	move.w #200*2/3,c_ycenter(a0)
 	move.l #$00020003,c_xspeed(a0)
 	move.w #$0004,c_zspeed(a0)
@@ -239,16 +239,21 @@ update	move.w d0,(a2)+         ;Copie des nouvelles coordonn‚es
 
 
 clear    	;Efface la figure
-	move.l  c_oldpts(a6),a3    ;Nouvelles coordonn‚es
-	clr.w   d0	       ;Couleur du fond
-	bsr     model_draw
+	bsr     efface
+;	move.l  c_oldpts(a6),a3    ;Nouvelles coordonn‚es
+;	clr.w   d0	       ;Couleur du fond
+;	bsr     model_draw
 
 draw    	;Dessine la figure
 	movea.l c_newpts(a6),a3    ;Nouvelles coordonn‚es
 	lea     linebuf(pc),a0
 	move.w  c_couleur(a6),d0
+;	addq.b  #1,d0
+;	andi.b  #$f,d0
+;	move.w  d0,c_couleur(a6)
 	bsr     model_draw
           rts
+
 
 model_draw
 	; Dessine le modŠle en a6
@@ -268,6 +273,42 @@ model_draw
           dbra    d4,.drawlp
           rts
 	
+	
+
+efface	;Efface la figure en a6
+	; d0.w: x (mod 16 = 0)  d1.w: y  d2.w: nombre de lignes -1
+	; Affecte d1-d2/a0-a1
+	move.w	#TCUBE*4-9,d2
+	move.w	#-(TCUBE*2-4),d1
+	add.w	c_ycenter(a6),d1
+	lea	bmpLineYOffsets,a1
+	add.w	d1,d1		; tableau de mots
+	move.w	(a1,d1.w),a1	; offset ligne
+	adda.l	BmpFb,a1	; frame buffer
+	move.w	#-(TCUBE+10),d0
+	add.w	c_xcenter(a6),d0
+	andi.w	#$fff0,d0	;trouve le num‚ro de groupe
+	lsr.w	#1,d0
+	andi.w	#-2,d0	;il faut ˆtre pair pour utiliser .w ou .l
+	add.w	d0,a1	   ;ajout x
+	moveq	#0,d3 ; valeur plans 0 et 1
+	moveq	#0,d4; valeur plans 2 et 3
+	
+.lpy	move.l	d3,(a1) 
+	move.l	d4,4(a1)  ;16
+	move.l	d3,8(a1)
+	move.l	d4,12(a1) ; 32
+	move.l	d3,16(a1)
+	move.l	d4,20(a1) ; 32
+	move.l	d3,24(a1)
+	move.l	d4,28(a1) ; 32
+
+	lea	160(a1),a1
+	dbra	d2,.lpy
+	rts
+	
+	rts
+		
 	
 	SECTION   DATA
 ; ------- D‚finition d'une figure ------
@@ -295,11 +336,11 @@ c_sizeof	rs.b 1
 model_npoints rs.w 1 ;nombre de points
 model_points  rs.l 1 ;pointeur vers tableau de points
 model_nlignes rs.w 1 ;nombre de lignes
-model_lignes  rs.l 1 ;ponteur vers tableau de lignes
+model_lignes  rs.l 1 ;pointeur vers tableau de lignes
 
 * ModŠle 3D de cube
 cube_model 
-TCUBE	EQU 15 	;Taille des cot‚s du cube
+TCUBE	EQU 18 	;Taille des cot‚s du cube
 NPOINTS	EQU 8 	;Nb de points
 NLIGNES	EQU 12 	;Nb de lignes
 .model:	dc.w NPOINTS-1
