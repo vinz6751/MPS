@@ -79,8 +79,9 @@ Cube3dInit:
 	lea    cube2,a0
 	move.w #146,c_xcenter(a0)
 	move.w #100,c_ycenter(a0)
-	move.l #$00040003,c_xspeed(a0)
-	move.w #$0003,c_zspeed(a0)
+	move.w #-4,c_xspeed(a0)
+	move.w #3,c_yspeed(a0)
+	move.w #3,c_zspeed(a0)
 	move.w #2,c_couleur(a0)
 	move.w #-1,c_efface(a0)
 
@@ -91,10 +92,11 @@ Cube3dInit:
 	lea    cube3,a0
 	move.w #80,c_xcenter(a0)
 	move.w #100,c_ycenter(a0)
-	move.l #$00030003,c_xspeed(a0)
-	move.w #$0003,c_zspeed(a0)
+	move.w #-3,c_xspeed(a0)
+	move.w #-5,c_yspeed(a0)
+	move.w #3,c_zspeed(a0)
 	move.w #7,c_couleur(a0)
-	move.w #0,c_efface(a0)
+	move.w #-1,c_efface(a0)
 
 	; Initialisation cube 4	
 	lea    cube4,a0
@@ -103,8 +105,9 @@ Cube3dInit:
 	lea    cube4,a0
 	move.w #208,c_xcenter(a0)
 	move.w #100,c_ycenter(a0)
-	move.l #$00020003,c_xspeed(a0)
-	move.w #$0004,c_zspeed(a0)
+	move.w #4,c_xspeed(a0)
+	move.w #3,c_yspeed(a0)
+	move.w #-4,c_zspeed(a0)
 	move.w #8,c_couleur(a0)
 	move.w #1,c_efface(a0)
 
@@ -143,23 +146,42 @@ Cube3dDeinit:
 
 
 Cube3dAnimation:
-	subq.w #1,cube3d_limiteur
-	bne.s  .fin
-	move.w #10,cube3d_limiteur
+;	subq.w #1,cube3d_limiteur
+;	bne.s  .fin
+;	move.w #10,cube3d_limiteur
+;	clr.b  cube3d_limiteur
 
-
-	clr.b  cube3d_limiteur
-	lea    cube1,a6
-	move.w Elite_ye2,d2
-	addi.w  #10,d2
-	move.w d2,c_ycenter(a6)
+	move.b cube3d_shifter(pc),d0
+	rol.b  #1,d0
+	move.b d0,cube3d_shifter
+	andi.b #$0f,d0
+	
+	btst   #0,d0
+	beq.s   .skip1
+	lea    cube1(pc),a6
+;	move.w Elite_ye2,d2
+;	addi.w  #10,d2
+;	move.w d2,c_ycenter(a6)
 	bsr    anime_cube
-	lea    cube2,a6
+	bra.s  .fin
+.skip1
+	btst   #1,d0
+	beq.s  .skip2
+	lea    cube2(pc),a6
 	bsr    anime_cube
-	lea    cube3,a6
+	bra.s  .fin
+.skip2
+	btst   #2,d0
+	beq.s  .skip3
+	lea    cube3(pc),a6
 	bsr    anime_cube
-	lea    cube4,a6
+	bra.s  .fin
+.skip3
+	btst   #3,d0
+	beq.s  .skip4
+	lea    cube4(pc),a6
 	bsr    anime_cube
+.skip4	
 .fin	rts
 
 anime_cube:
@@ -299,10 +321,10 @@ efface	;Efface la figure en a6
 	move.w	#TCUBE*4-9,d2
 	move.w	#-(TCUBE*2-4),d1
 	add.w	c_ycenter(a6),d1
-	lea	bmpLineYOffsets,a1
+	lea	bmpLineYOffsets(pc),a1
 	add.w	d1,d1		; tableau de mots
 	move.w	(a1,d1.w),a1	; offset ligne
-	adda.l	BmpFb,a1	; frame buffer
+	adda.l	BmpFb(pc),a1	; frame buffer
 	move.w	#-(TCUBE+10),d0
 	add.w	c_xcenter(a6),d0
 	andi.w	#$fff0,d0	;trouve le num‚ro de groupe
@@ -312,16 +334,16 @@ efface	;Efface la figure en a6
 	moveq	#0,d3 ; valeur plans 0 et 1
 	moveq	#0,d4; valeur plans 2 et 3
 	
-.lpy	move.l	d3,(a1) 
-	move.l	d4,4(a1)  ;16
-	move.l	d3,8(a1)
-	move.l	d4,12(a1) ; 32
-	move.l	d3,16(a1)
-	move.l	d4,20(a1) ; 32
-	move.l	d3,24(a1)
-	move.l	d4,28(a1) ; 32
+.lpy	move.l	d3,(a1)+ 
+	move.l	d4,(a1)+  ;16
+	move.l	d3,(a1)+
+	move.l	d4,(a1)+ ; 32
+	move.l	d3,(a1)+
+	move.l	d4,(a1)+ ; 32
+	move.l	d3,(a1)+
+	move.l	d4,(a1) ; 32
 
-	lea	160(a1),a1
+	lea	160-7*4(a1),a1
 	dbra	d2,.lpy
 	rts
 	
@@ -329,6 +351,9 @@ efface	;Efface la figure en a6
 		
 	
 	SECTION   DATA
+cube3d_shifter  dc.b %10001000
+	EVEN
+	
 ; ------- D‚finition d'une figure ------
 	rsreset
 c_xcenter	rs.w 1  ;X centre
