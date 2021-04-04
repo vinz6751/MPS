@@ -8,13 +8,13 @@ BlitL32
 	lea	bmpLineYOffsets,a1
 	add.w	d1,d1		; tableau de mots
 	move.w	(a1,d1.w),a1	; offset ligne
-	adda.l	BmpFb,a1	; frame buffer
+	adda.l	BmpFb,a1		; frame buffer
 	add.w	d0,a1		; ajout x
-.lpy	move.l	(a0)+,(a1) 
-	move.l	(a0)+,4(a1)
-	move.l	(a0)+,8(a1)
-	move.l	(a0)+,12(a1)	
-	lea	160(a1),a1
+.lpy	move.l	(a0)+,(a1)+ 
+	move.l	(a0)+,(a1)+
+	move.l	(a0)+,(a1)+
+	move.l	(a0)+,(a1)	
+	lea	160-12(a1),a1
 	dbra	d2,.lpy
 	rts
 
