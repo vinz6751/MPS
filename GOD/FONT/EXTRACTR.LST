@@ -1,0 +1,45 @@
+' Programme d'extraction de blocs mÇmoire
+' Le rÇsultat est un fichier contenant une sÇquence de cellules de caractäres,
+' et toutes les donnÇes de la cellule sont contigÅes (les lignes sont concatÇnÇes)
+'
+' Vinz / MPS
+'
+' RÇserve mÇmoire Çcran pour charger l'image
+RESERVE 5120
+LET fonte_w%=16
+LET fonte_h%=10
+LET nb_cells%=43
+entree=MALLOC(32034)
+IF entree=0 THEN
+  PRINT "Pas assez de mÇmoire pour fichier d'entrÇe"
+  END
+ENDIF
+BLOAD "f:\mps\god\font\font3.pi1",entree
+' Passe la palette
+entree=entree+34
+'
+LET taille_sortie%=nb_cells%*fonte_w%*fonte_h%
+PRINT "Taille sortie: ";taille_sortie%
+sortie=MALLOC(taille_sortie%)
+IF sortie=0 THEN
+  PRINT "Pas assez de mÇmoire pour fichier de sortie"
+  END
+ENDIF
+isortie%=0
+'
+PRINT "EntrÇe: ";entree
+FOR i%=0 TO nb_cells%
+  ' base est l'adresse de la cellule
+  base%=(i% DIV 20)*160*(fonte_h%-1)+(i% MOD 20)*8
+  ' PRINT "Base ";i%;": ";base%
+  '
+  ' Copie la cellule dans le tampon
+  FOR ligne%=0 TO fonte_h%-1
+    ' PRINT "isortie% ";isortie%
+    LPOKE sortie+isortie%,LPEEK(entree+base%)
+    LPOKE sortie+isortie%+4,LPEEK(entree+base%+4)
+    isortie%=isortie%+8
+    base%=base%+160
+  NEXT ligne%
+NEXT i%
+BSAVE "f:\mps\god\font\fonte.bin",sortie,taille_sortie%

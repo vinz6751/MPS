@@ -65,7 +65,7 @@ Cube3dInit:
 	bsr    init_cube
 	lea    cube1,a0
 	move.w #32,c_xcenter(a0)
-	move.w #200/3,c_ycenter(a0)
+	move.w #100,c_ycenter(a0)
 	move.l #$00040003,c_xspeed(a0)
 	move.w #$0004,c_zspeed(a0)
 	move.w #1,c_couleur(a0)
@@ -276,13 +276,10 @@ anime_cube:
 	dbra   d5,.calcul	    ;Calcul pour tous les points...
 
 
-.clear    	;Efface la figure
+.clear    ;Efface la figure
 	tst.w   c_efface(a6)
 	beq.s   .draw
 	bsr     efface
-;	move.l  c_oldpts(a6),a3    ;Nouvelles coordonn‚es
-;	clr.w   d0	       ;Couleur du fond
-;	bsr     model_draw
 
 .draw    	;Dessine la figure
 	movea.l c_newpts(a6),a3    ;Nouvelles coordonn‚es
@@ -315,37 +312,35 @@ model_draw
 	
 	
 
-efface	;Efface la figure en a6
+efface	;Efface la figure en a6, carr‚d e 64px de haut
 	; d0.w: x (mod 16 = 0)  d1.w: y  d2.w: nombre de lignes -1
 	; Affecte d1-d2/a0-a1
-	move.w	#TCUBE*4-9,d2
-	move.w	#-(TCUBE*2-4),d1
-	add.w	c_ycenter(a6),d1
+	move.w	c_ycenter(a6),d1
+	subi.w	#33,d1
 	lea	bmpLineYOffsets(pc),a1
 	add.w	d1,d1		; tableau de mots
 	move.w	(a1,d1.w),a1	; offset ligne
 	adda.l	BmpFb(pc),a1	; frame buffer
-	move.w	#-(TCUBE+10),d0
-	add.w	c_xcenter(a6),d0
+	move.w	c_xcenter(a6),d0
+	subi.w	#28,d0
 	andi.w	#$fff0,d0	;trouve le num‚ro de groupe
 	lsr.w	#1,d0
 	andi.w	#-2,d0	;il faut ˆtre pair pour utiliser .w ou .l
 	add.w	d0,a1	   ;ajout x
-	moveq	#0,d3 ; valeur plans 0 et 1
-	moveq	#0,d4; valeur plans 2 et 3
 	
-.lpy	move.l	d3,(a1)+ 
-	move.l	d4,(a1)+  ;16
-	move.l	d3,(a1)+
-	move.l	d4,(a1)+ ; 32
-	move.l	d3,(a1)+
-	move.l	d4,(a1)+ ; 32
-	move.l	d3,(a1)+
-	move.l	d4,(a1) ; 32
-
-	lea	160-7*4(a1),a1
-	dbra	d2,.lpy
-	rts
+	moveq	#0,d0
+	moveq	#0,d1
+	moveq	#0,d2
+	moveq	#0,d3
+	moveq	#0,d4
+	moveq	#0,d5
+	moveq	#0,d6
+	moveq	#0,d7
+	lea	160*64+8*4(a1),a1
+	REPT	64
+	movem.l	d0-d7,-(a1)
+	lea	-160+8*4(a1),a1
+	ENDR
 	
 	rts
 		

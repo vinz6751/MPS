@@ -17,7 +17,8 @@ BlitL32
 	lea	160-12(a1),a1
 	dbra	d2,.lpy
 	rts
-
+	
+	IFNE	0 ;inutilis‚
 BlitShiftUp32_1px
 	; D‚place de 1 pixel vers le haut un bloc de 32 de large
 	; point‚ par a0, d2.w nombre de lignes-1
@@ -61,7 +62,7 @@ BlitShiftDown32_1px
 	clr.l	(a0)+
 	clr.l	(a0)
 	rts
-
+	ENDC
 
 BlitCalcOffset
 	; Calcule l'offset dans la m‚morie ‚cran x,y

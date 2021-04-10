@@ -93,6 +93,28 @@ xe2:	lea	le2+34,a0 ; passe 2 octets en tˆte plus 32 palette
 	ENDR
 	SAUVE	nom_e2
 
+alien:	; gros alien rouge. Il est avec la couleur 7 donc on va 
+	Fopen	nom_bidules
+	move.w	d0,handle
+	Fread	handle,#32034,buf
+	Fclose	handle
+	lea	buf+34,a2
+	lea	buf2,a1
+	; l'alien fait 75*50 pixels 75/16 -> il faut 5x16blocs sur 4 plans: 5x2o*4 = 40 octets par ligne
+	moveq	#49,d4
+.boucle	movea.l	a2,a0
+	REPT	10
+	move.l	(a0)+,(a1)+
+	ENDR
+	lea	160(a2),a2
+	dbra	d4,.boucle
+	Fdelete	nom_alien
+	Fcreate	nom_alien
+	move.w	d0,handle
+	Fwrite	handle,#40*50,buf2
+	Fclose	handle
+
+
 scrollMessage:
 	Fopen	nom_scrollmsg
 	move.w	d0,handle
@@ -166,6 +188,7 @@ calculeYoffset
 	
 	SECTION BSS
 buf	DS.W	32000
+buf2	DS.W	32000
 x	DS.W	1
 y	DS.W	1
 yoffset	DS.W	200
@@ -189,3 +212,5 @@ nom_e2	dc.b	"elite\e2.bin",0
 nom_palette	dc.b	"elite\palette.bin",0
 nom_scrollmsg 	dc.b "message.txt",0
 nom_scrollbin	dc.b "message.bin",0
+nom_bidules	dc.b "elite\bidules.pi1",0
+nom_alien		dc.b "alien.bin",0

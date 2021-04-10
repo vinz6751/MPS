@@ -1,82 +1,106 @@
+RASTER_DEBUG	EQU	0
+HBL		EQU	$120
+
+rasterCouleurP EQU	$502 ;On utilise qqchose bas en RAM pour pouvoir
+		     ;ne transf‚rer que des word et b‚n‚ficier
+		     ;de l'extension de signe
+	IFNE	RASTER_DEBUG
+VBL	EQU	$70
+
+	;Programme d'essai
+main	pea	.efface_ecran
+	move.w	#9,-(sp)
+	trap	#1	;Cconws
+	addq.l	#6,sp
+	
+	pea	.main
+	move.w	#38,-(sp)
+	trap	#14	;Supexec
+	addq.l	#6,sp
+	clr.w	-(sp)
+	trap	#1	;Pterm0
+
+.main	bsr	RasterInit
+	clr.w	$ffff8240.w
+	move.l	VBL.w,.oldVbl
+	move.l	#RasterVbl,VBL.w
+
+.boucle	move.l	#$00020002,-(sp)
+	trap	#13
+	addq.l	#4,sp
+	tst.w	d0
+	bne	.quitte
+	
+	;bsr	RasterAnimation
+	bra	.boucle
+
+
+.quitte	move.l	oldHbl(pc),HBL.w
+	move.l	.oldVbl(pc),VBL.w
+	bsr	RasterDeinit
+	move.w	#-1,$ffff8240
+	rts
+
+.efface_ecran dc.b 27,'E',0
+	EVEN
+.oldVbl	ds.l 1
+	ENDC
+
+
 RasterInit
-	move.w	#16,rasterCouleur
-	move.w	#0,rasterLigne
-	move.w	#50,rasterDiviseur
+	; Calcule le d‚grad‚
+	move.l	#rasterCouleurs,rasterCouleurP.w
+	lea	rasterCouleurs,a3
+	move.w	#$0112,(a3)+
+	clr.w	(a3)+
+
+	; Installe vecteur HBL
+	move.l	HBL.w,oldHbl
+	move.l	#RasterHbl,HBL.w
+	; Active les interruptions HBL
 	rts
-	
+oldHbl	ds.l 1
+
+
 RasterDeinit
-	rts
-
-RasterAnimation
-	subi.w	#1,rasterDiviseur
-	bne.s	.fin
-	move.w	#50,rasterDiviseur
-			
-
-	; Initialisation
-	; Efface ligne
-	clr.w	d1	; noir
-	move.w	rasterLigne,d0
-	bsr	LigneHorizontale
-	
-.boucle	move.w	rasterCouleur,d1
-	subq.w	#1,d1
-	bne.s	.colOk
-.resetCol	moveq.w	#15,d1
-.colOk	move.w	d1,rasterCouleur
-
-	move.w	rasterLigne,d0
-	addq.w	#1,d0
-	cmpi.w	#10,d0
-	bne.s	.wrapl
-	clr.w	d0
-.wrapl	move.w	d0,rasterLigne
-
-	bsr	LigneHorizontale
-.fin	rts	
-	SECTION DATA
-rasterCouleur	ds.w	1	
-rasterLigne	ds.w	1
-rasterDiviseur	ds.w	1
-	SECTION TEXT	
-LigneHorizontale
-	; Ligne horizontale traversant tout l'‚cran. On charge un chunk
-	; dans un registre et aprŠs on copie dans plusieurs registres
-	; pour utiliser movem
-	; d0.w: y, d1.w: couleur
-	lea	bmpLineYOffsets,a3 ; Obtient adresse de la ligne
-	addq.w	#1,d0	; Ligne suivante (… cause pr‚d‚cr‚mentation du movem)
-	add.w	d0,d0	; Offsets sont des mots
-	movea.w	(a3,d0.w),a3
-	adda.l	ScnFb,a3	
-	lea	ChunkCouleur,a2 ; R‚cup‚ration du chunk couleur
-	lsl.w	#3,d1	; Facteur d'‚chelle
-	move.l	(a2,d1.w),d2
-	move.l	d2,d3
-	move.l	d2,d4
-	move.l	d2,d5
-	move.l	d2,d6
-	REPT	FBSIZE/YRES/5/4 ; 5 registres de 4 octets utilis‚s
-	movem.l	d2-d6,-(a3)
-	ENDR	
+	move.b 	#0,$fffffa1b.w 	;Timer B stop
+	andi.b	#-2,$fffffa07.w	;d‚sactive HBL
+	move.l	oldHbl,HBL.w
 	rts
 
 
-	SECTION DATA
-ChunkCouleur ; 4 pixels de la mˆme couleur d'un chunk
-	dc.w 0,0,0,0
-	dc.w 0,0,0,-1
-	dc.w 0,0-1,0
-	dc.w 0,0,-1,-1
-	dc.w 0,-1,0,0
-	dc.w 0,-1,0,-1
-	dc.w 0,-1,-1,0
-	dc.w 0,-1,-1,-1
-	dc.w -1,0,0,0
-	dc.w -1,0,0,-1
-	dc.w -1,0-1,0
-	dc.w -1,0,-1,-1
-	dc.w -1,-1,0,0
-	dc.w -1,-1,0,-1
-	dc.w -1,-1,-1,0
-	dc.w -1,-1,-1,-1
+RasterVbl	clr.w	$ffff8240.w
+	move.l	#rasterCouleurs,rasterCouleurP
+	ori.b	#1,$fffffa07.w ; enable HBL	
+	ori.b	#1,$fffffa13.w ; unmask HBL	
+	move.b 	#60,$fffffa21.w ; Timer B data : Counter value
+	move.b 	#8,$fffffa1b.w ; Timer B start : Event count mode
+	IFEQ	RASTER_DEBUG
+	rts
+	ELSE
+	rte
+	ENDC
+
+
+RasterHbl	move.l	a5,-(sp)
+	move.l	rasterCouleurP.w,a5
+	move.w	(a5)+,$ffff8240.w
+	beq.s	.stopHbl
+	bne.s	.cont
+	move.l	#rasterCouleurs,a5
+.cont	move.l	a5,rasterCouleurP.w
+	movea.l	(sp)+,a5
+	move.b 	#0,$fffffa1b.w 	;Timer B stop
+	move.b 	#90,$fffffa21.w 	;Timer B data : Counter value
+	move.b 	#8,$fffffa1b.w 	;Timer B start : Event count mode
+	bclr 	#0,$fffffa0f.w 	; acknowledge interrupt Timer B
+	rte
+.stopHbl	bclr	#0,$fffffa07.w	; disable HBL
+	move.b 	#0,$fffffa1b.w 	;Timer B stop
+	bclr 	#0,$fffffa0f.w 	; acknowledge interrupt Timer B
+	movea.l	(sp)+,a5
+	rte
+
+
+rasterCouleurs: ;Liste des couleurs pour chaque ligne. 0 marque la fin
+	ds.w 200+1

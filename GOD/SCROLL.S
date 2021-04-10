@@ -96,9 +96,12 @@ offset	SET	offset+10*4
 	
 	SECTION DATA
 scrollMessage	;dc.b "ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789 .,-!'? CECI EST UN MESSAGE A SCROLLER ! BON C'EST PAS TOP MAIS C'EST MON PREMIER ECRAN !! MPS POWER !!   ",0
+	; Message … afficher, produit par l'outil EXTRAITL.S pour
+	; remplacer les codes ASCII par des num‚ros de cellule dans le fichier FONT.BIN
 	INCBIN	message.bin
 	
 	EVEN
+	; Ce fichier est produit par l'outil EXTRACTR dans le dossier FONT
 scrollFont	INCBIN	font\fonte.bin
 
 	EVEN

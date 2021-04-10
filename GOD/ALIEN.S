@@ -18,6 +18,22 @@ AlienDeinit
 
 
 AlienAnimation
+	moveq	#2,d0
+	moveq	#0,d1
+	moveq	#0,d2
+	bsr	alienDessine
+
+	moveq	#3,d0
+	moveq	#20,d1
+	moveq	#20,d2
+	bsr	alienDessine
+
+	moveq	#8,d0
+	moveq	#40,d1
+	moveq	#40,d2
+	bsr	alienDessine
+
+	
 ;	rts
 	
 ;	bsr	ScnVsync
@@ -73,6 +89,7 @@ alienDessine
 	move.w	#-1,(a1)
 	lea.l	.buf,a0
 	jmp	BmpPixelPutMono	
+	rts
 	SECTION BSS
 .buf	ds.w	ALIEN_NB_POINTS+1 ; +1 pour le -1 final
 	EVEN

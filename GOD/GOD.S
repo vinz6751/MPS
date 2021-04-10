@@ -1,4 +1,4 @@
-	OUTPUT 	GOD.TOS
+	OUTPUT 	f:\mps\god\GOD.TOS
 
 	OPT	P=68000;
 ;	OPT	O+
@@ -45,49 +45,14 @@ Main	move.l	sp,OldStack
 	; Fixe l'adresse logique pour le dessin
 	move.l	ScnFb,BmpFb
 
-	IFNE 0
-	moveq	#1,d0
-	lea	li1,a0
-	jsr	BmpLine
-	moveq	#1,d0
-	lea	li2,a0
-	jsr	BmpLine
-	moveq	#1,d0
-	lea	li3,a0
-	jsr	BmpLine
-	moveq	#1,d0
-	lea	li4,a0
-	jsr	BmpLine
-	moveq	#1,d0
-	lea	li5,a0
-	jsr	BmpLine
-	moveq	#1,d0
-	lea	li6,a0
-	jsr	BmpLine
-	moveq	#1,d0
-	lea	li7,a0
-	jsr	BmpLine
-	moveq	#1,d0
-	lea	li8,a0
-	jsr	BmpLine
-	Cnecin
-	bra	quitte	
-li1	dc.w	10,15,310,190 ; \ haut gauche … bas droite
-li2	dc.w	10,15,10,190 ; de haut en bas
-li3	dc.w      10,15,310,15 ; de gauche … droite
-li4	dc.w	10,190,310,15 ; / bas gauche … haut droite
-li5	dc.w	310,190,10,15
-li6	dc.w	10,190,10,15
-li7	dc.w	310,15,10,15
-li8	dc.w	310,15,190,15
-liall	dc.l	li1,li2,li3,li4,li5,li6,li7,li8
-	ENDC
 	
 	RestaurePalette ElitePalette
-;	bsr	RasterInit
+	bsr	RasterInit
 	bsr	VblInstalle
 	bsr	MusiqueInit
-;	bsr	KbdInstalle
+	IFEQ	DEBUG
+	bsr	KbdInstalle
+	ENDC
 	bsr	ScnEfface
 ;	bsr	AlienInit
 	bsr	EliteInit
@@ -96,12 +61,14 @@ liall	dc.l	li1,li2,li3,li4,li5,li6,li7,li8
 
 	clr.w	FlagQuitter
 BouclePrincipale
+	IFNE	DEBUG
 	Bconstat2
 	bne.s	quitte
+	ELSE
 	tst.w	FlagQuitter
 	bne.s	quitte
-
-;	bsr	RasterAnimation
+	ENDC
+	
 ;	bsr	AlienAnimation
 	bsr	EliteAnimation
 	bsr	ScrollAnimation
@@ -110,22 +77,23 @@ BouclePrincipale
 	bra.s	BouclePrincipale
 
 quitte		
+	IFEQ	DEBUG
+	bsr	KbdDesinstalle
+	ENDC
+
 	IFNE	DEBUG
 	jsr	Cube3dDeinit
 	bsr	ScrollDeinit
 ;	bsr	AlienDeinit
-;	bsr	KbdDesinstalle
 	bsr	VblDesinstalle
-;	bsr	RasterDeinit
+	bsr	RasterDeinit
 	bsr	MusiqueDeinit
 	bsr	ScnRestore
 	bsr	ScnDeinit
 	RestaurePalette OldPalette
 	move.l	OldStack,sp
 	ENDC
-
 	rts	 ; Retour de la fonction principale
-
 
 VblInstalle
 	move.l	VBL.w,OldVbl
@@ -137,6 +105,7 @@ VblDesinstalle
 	rts
 	
 VblRoutine
+	bsr	RasterVbl
 	bsr	MusiqueAnimation
 	move.l	OldVbl,-(sp)
 	rts
@@ -152,12 +121,12 @@ KbdDesinstalle
 
 KbdRoutine
 	move.w	d0,-(sp)
-	move.b	KBD_ACIA_CTRL,d0
+	move.b	KBD_ACIA_CTRL.w,d0
 	bpl.s	.rien
-	cmpi.b	#$39,KBD_ACIA_DATA ; $39 est le scancode de "espace"
+	cmpi.b	#$39,KBD_ACIA_DATA.w ; $39 est le scancode de "espace"
 	bne.s	.rien
 	move.w	#-1,FlagQuitter
-.rien	bclr	#6,$fffa11
+.rien	bclr	#6,$fffffa11.w
 	move.w	(sp)+,d0
 	rte
 
@@ -177,13 +146,11 @@ KbdRoutine
 
 	SECTION BSS
 	EVEN
-FlagQuitter	ds.w	1	; Si -1 on quitte
-	IFNE	DEBUG
-OldStack	ds.l	1	; ancienne pile
-OldPalette ds.w	16	; ancienne palette de couleur	
-OldVbl	ds.l	1	; ancien vecteur VBL
-OldKbdVecs	ds.l	1; ancien vecteur clavier
-	ENDC
-	ds.b	2024	; 1Ko de pile
-Stack	ds.l	1	; sommet de la pile
-Fb	ds.l	FBSIZE+256+10*160 ; 256 pour alignement 16bit, 10 lignes suppl‚mentaire pour scrolltext
+FlagQuitter ds.w	1	; Si -1 on quitte
+OldStack	  ds.l	1	; ancienne pile
+OldPalette  ds.w	16	; ancienne palette de couleur	
+OldVbl	  ds.l	1	; ancien vecteur VBL
+OldKbdVecs  ds.l	1	; ancien vecteur clavier
+	  ds.b	2024	; 1Ko de pile
+Stack	  ds.l	1	; sommet de la pile
+Fb	  ds.l	FBSIZE+256+10*160 ; 256 pour alignement 16bit, 10 lignes suppl‚mentaire pour scrolltext

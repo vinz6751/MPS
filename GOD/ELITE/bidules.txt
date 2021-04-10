@@ -1,0 +1,37 @@
+pixels inclus
+
+atari
+haut=13
+bas=56
+droite=135
+gauche=90
+
+bidules
+haut=2
+bas=57
+gauche=257
+droite314
+
+gros fantomes
+gauche=86
+droite=208
+haut=157
+bas=180
+
+gros pacman
+haut=157
+base=180
+fermé:
+gauche=56 droite=82
+ouvert
+gauche=24 droite=49
+
+petit pacman
+ouvert
+gauche=18 droite=29
+haut=100 bas=110
+fermé
+gauche=33 droite=44
+
+petits fantômes
+gauche=47 drpote=104

@@ -20,24 +20,24 @@ ScnSet:
 	; L'adresse de la m‚moire ‚cran effective esc conserv‚e en
 	; ScnFb. L'ancienne adresse en ScnOlffb
 	; TODO: Aligner sur 256 ou 16 bits suivant STf ou STe
-	move.b	$ff8260,ScnOldres
-	move.b	d0,$ff8260	; Low res
+	move.b	$ffff8260.w,ScnOldres
+	move.b	d0,$ffff8260.w	; Low res
 
 	; M‚moire ‚cran
-	move.l	$ff8200,ScnOldfb
+	move.l	$ffff8200.w,ScnOldfb
 	move.l	a0,d0
 	add.l	#$ff,d0
 	clr.b	d0
 	move.l	d0,ScnFb
 	lsr.w	#8,d0
-	move.l	d0,$ff8200
+	move.l	d0,$ffff8200.w
 	rts
 	
 
 ScnRestore:
 	; Restore
-	move.l	ScnOldfb(pc),$ff8200
-	move.b	ScnOldres(pc),$ff8260	
+	move.l	ScnOldfb(pc),$ffff8200.w
+	move.b	ScnOldres(pc),$ffff8260.w	
 	rts
 
 ScnVsyncAndExecute:
@@ -64,14 +64,14 @@ ScnPaletteSetColorRGB3
 	or.w	d1,d3
 	or.w	d2,d3
 	add.w	d0,d0
-	lea	$ff8240,a0
+	lea	$ffff8240.w,a0
 	move.w	d3,(a0,d0.w)
 	rts
 
 ScnPaletteSetColorSte
 	; d0.w num‚ro de couleur
 	; d1.w couleur au format STe (rRRR gGGG bBBB) , minuscule: LSb	
-	lea	$ff8240,a0
+	lea	$ffff8240.w,a0
 	add.w	d0,d0
 	move.w	d1,(a0,d0.w)
 	rts
