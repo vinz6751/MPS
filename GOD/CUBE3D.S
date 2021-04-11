@@ -64,8 +64,8 @@ Cube3dInit:
 	lea    cube_model,a1
 	bsr    init_cube
 	lea    cube1,a0
-	move.w #32,c_xcenter(a0)
-	move.w #100,c_ycenter(a0)
+	move.w #64,c_xcenter(a0)
+	move.w #110,c_ycenter(a0)
 	move.l #$00040003,c_xspeed(a0)
 	move.w #$0004,c_zspeed(a0)
 	move.w #1,c_couleur(a0)
@@ -77,8 +77,8 @@ Cube3dInit:
 	lea    cube_model,a1
 	bsr    init_cube
 	lea    cube2,a0
-	move.w #146,c_xcenter(a0)
-	move.w #100,c_ycenter(a0)
+	move.w #128,c_xcenter(a0)
+	move.w #120,c_ycenter(a0)
 	move.w #-4,c_xspeed(a0)
 	move.w #3,c_yspeed(a0)
 	move.w #3,c_zspeed(a0)
@@ -90,8 +90,8 @@ Cube3dInit:
 	lea    cube_model,a1
 	bsr    init_cube
 	lea    cube3,a0
-	move.w #80,c_xcenter(a0)
-	move.w #100,c_ycenter(a0)
+	move.w #192,c_xcenter(a0)
+	move.w #110,c_ycenter(a0)
 	move.w #-3,c_xspeed(a0)
 	move.w #-5,c_yspeed(a0)
 	move.w #3,c_zspeed(a0)
@@ -103,8 +103,8 @@ Cube3dInit:
 	lea    cube_model,a1
 	bsr    init_cube
 	lea    cube4,a0
-	move.w #208,c_xcenter(a0)
-	move.w #100,c_ycenter(a0)
+	move.w #256,c_xcenter(a0)
+	move.w #120,c_ycenter(a0)
 	move.w #4,c_xspeed(a0)
 	move.w #3,c_yspeed(a0)
 	move.w #-4,c_zspeed(a0)
