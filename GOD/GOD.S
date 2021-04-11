@@ -59,6 +59,7 @@ Main	move.l	sp,OldStack
 	bsr	ScrollInit
 	jsr	Cube3dInit
 	jsr	DecoInit
+	jsr	LigneInit
 	
 	clr.w	FlagQuitter
 BouclePrincipale
@@ -75,6 +76,7 @@ BouclePrincipale
 	bsr	ScrollAnimation
 	jsr	Cube3dAnimation
 	jsr	DecoAnimation
+	jsr	LigneAnimation
 		
 	bra.s	BouclePrincipale
 
@@ -91,6 +93,7 @@ quitte
 	bsr	RasterDeinit
 	bsr	MusiqueDeinit
 	jsr	DecoDeinit
+;	jsr	LigneDeinit
 	bsr	ScnRestore
 	bsr	ScnDeinit
 	RestaurePalette OldPalette
@@ -144,6 +147,7 @@ KbdRoutine
 	INCLUDE musique.s
 	INCLUDE cube3d.s
 	INCLUDE deco.s
+	INCLUDE ligne.s
 			
 	SECTION DATA	
 	EVEN

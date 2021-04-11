@@ -50,14 +50,14 @@ ScrollAnimation
 	; plan 0
 	lsl.w	(a1)+	; r‚cupŠre bit du plan 0
 sxo	SET	152 	; scroll x offset
-	REPT	15
+	REPT	14
 	roxl	sxo(a3)	; insŠre en pixel 15 plan0 dernier chunk de ligne et d‚cale toute la ligne
 sxo	SET	sxo-8	; chunk pr‚c‚dent
 	ENDR
 	; plan 1
 	lsl.w	(a1)+	; meme chose plan 1
 sxo	SET	154
-	REPT	15
+	REPT	14
 	roxl	sxo(a3)
 sxo	SET	sxo-8
 	ENDR

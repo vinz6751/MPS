@@ -6,8 +6,8 @@ HBL		EQU	$120
 
 
 ; Configuration
-CENTRE_HAUT	EQU	70
-CENTRE_BAS	EQU	90	
+;CENTRE_HAUT	EQU	70
+;CENTRE_BAS	EQU	90	
 
 
 ; Programme de d‚bug
@@ -71,7 +71,7 @@ RasterVbl	; r‚initialise le raster
 	move.l	#rasterHblMilieu,HBL.w
 	ori.b	#1,$fffffa07.w ; enable HBL	
 	ori.b	#1,$fffffa13.w ; unmask HBL	
-	move.b 	#CENTRE_HAUT,$fffffa21.w ; Timer B data : Counter value
+	move.b 	ligne1y+1,$fffffa21.w ; Timer B data. ligne1y est un mot
 	move.b 	#8,$fffffa1b.w ; Timer B start : Event count mode
 	IFEQ	RASTER_DEBUG
 	rts
@@ -82,7 +82,7 @@ RasterVbl	; r‚initialise le raster
 rasterHblMilieu
 	clr.w	$ffff8240.w	;noir
 	move.b 	#0,$fffffa1b.w 	;stoppe Timer B
-	move.b 	#CENTRE_BAS,$fffffa21.w 	;valeur compteur Timer B
+	move.b 	#LIGNE2Y-LIGNE1Y-1,$fffffa21.w 	;valeur compteur Timer B
 	move.b 	#8,$fffffa1b.w 	;commence … compter les ‚vŠnements
 	bclr 	#0,$fffffa0f.w 	;fin interruption Timer B
 	move.l	#rasterHblBas,HBL.w

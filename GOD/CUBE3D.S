@@ -65,7 +65,7 @@ Cube3dInit:
 	bsr    init_cube
 	lea    cube1,a0
 	move.w #64,c_xcenter(a0)
-	move.w #110,c_ycenter(a0)
+	move.w #110-LIGNE1Y,c_ycenter(a0)
 	move.l #$00040003,c_xspeed(a0)
 	move.w #$0004,c_zspeed(a0)
 	move.w #1,c_couleur(a0)
@@ -78,7 +78,7 @@ Cube3dInit:
 	bsr    init_cube
 	lea    cube2,a0
 	move.w #128,c_xcenter(a0)
-	move.w #120,c_ycenter(a0)
+	move.w #120-LIGNE1Y,c_ycenter(a0)
 	move.w #-4,c_xspeed(a0)
 	move.w #3,c_yspeed(a0)
 	move.w #3,c_zspeed(a0)
@@ -91,7 +91,7 @@ Cube3dInit:
 	bsr    init_cube
 	lea    cube3,a0
 	move.w #192,c_xcenter(a0)
-	move.w #110,c_ycenter(a0)
+	move.w #110-LIGNE1Y,c_ycenter(a0)
 	move.w #-3,c_xspeed(a0)
 	move.w #-5,c_yspeed(a0)
 	move.w #3,c_zspeed(a0)
@@ -104,7 +104,7 @@ Cube3dInit:
 	bsr    init_cube
 	lea    cube4,a0
 	move.w #256,c_xcenter(a0)
-	move.w #120,c_ycenter(a0)
+	move.w #120-LIGNE1Y,c_ycenter(a0)
 	move.w #4,c_xspeed(a0)
 	move.w #3,c_yspeed(a0)
 	move.w #-4,c_zspeed(a0)
@@ -203,9 +203,9 @@ anime_cube:
 
 	* Traitement rotation
 	lea     sinus_tab(pc),a0 ;Adresse de la table des sinus
-	movea.l c_points(a6),a1 ;Coordonn‚es courantes
-	movea.l c_newpts(a6),a2 ;Prochaine position … tracer
-	movea.l c_oldpts(a6),a3 ;DerniŠre position trac‚e
+	movea.l c_points(a6),a1  ;Coordonn‚es courantes
+	movea.l c_newpts(a6),a2  ;Prochaine position … tracer
+	movea.l c_oldpts(a6),a3  ;DerniŠre position trac‚e
 	move.w c_npoints(a6),d5  ;Nombre de points … traiter
 
 .calcul	move.w (a1)+,d0         ;x suivant
@@ -268,6 +268,7 @@ anime_cube:
 
 	add.w  c_xcenter(a6),d0 ;Offset de centre d'‚cran
 	add.w  c_ycenter(a6),d1 ;idem en vertical
+	add.w  ligne1y,d1	    ;D‚cale verticalement suivant la bande noire
 
 .update	move.w d0,(a2)+         ;Copie des nouvelles coordonn‚es
 	move.w d1,(a2)+           
@@ -304,6 +305,7 @@ model_draw
           move.l  (a3,d5.w),(a0)     ;Fixe x1 et y1
           move.w  (a4)+,d5           ;Lecture no de point fin
           move.l  (a3,d5.w),4(a0)    ;Fixe x2 et y2
+	
           movem.l d0/d4/a0/a3/a4/a6,-(sp)  ;Gestion de la boucle
           jsr     BmpLine            ;Trace la ligne...
           movem.l (sp)+,d0/d4/a0/a3/a4/a6
@@ -316,6 +318,7 @@ efface	;Efface la figure en a6, carr‚d e 64px de haut
 	; d0.w: x (mod 16 = 0)  d1.w: y  d2.w: nombre de lignes -1
 	; Affecte d1-d2/a0-a1
 	move.w	c_ycenter(a6),d1
+	add.w	ligne1y,d1
 	subi.w	#33,d1
 	lea	bmpLineYOffsets(pc),a1
 	add.w	d1,d1		; tableau de mots

@@ -376,7 +376,34 @@ BmpCircle:
 	bsr	.flush
 	rts
 	
+
+BmpClearLineStLow ; Efface la ligne en d0
+	lea 	bmpLineYOffsets,a1
+	addq.l	#1,d0 ; on commence sur la ligne suivante … cause de la pr‚d‚cr‚mentation
+	add.l	d0,d0 ; facteur d'‚chelle
+	movea	(a1,d0.w),a1 
+	adda.l	BmpFb,a1
+	moveq	#0,d0
+	moveq	#0,d1
+	moveq	#0,d2
+	moveq	#0,d3
+	moveq	#0,d4
+	moveq	#0,d5
+	moveq	#0,d6
+	moveq	#0,d7
+	movea.l	d0,a2
+	movea.l	d0,a3
+	movea.l	d0,a4
+	movea.l	d0,a5
+	movea.l	d0,a6
+	; 13*4 +2 = 160
+	movem.l	d0-d7/a2-a6,-(a1)
+	movem.l	d0-d7/a2-a6,-(a1)
+	movem.l	d0-d7/a2-a6,-(a1)
+	clr.l	-(a1)	
 	
+	rts
+
 
 	SECTION BSS
 	EVEN

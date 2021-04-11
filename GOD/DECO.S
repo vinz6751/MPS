@@ -21,6 +21,9 @@ DecoInit:
 	lea    decoFantomes,a0
 	bsr.s  .initDeco
 
+	lea    decoPacgommes,a0
+	bsr.s  .initDeco
+
 	IFNE DECO_DEBUG
 .boucle	lea decoAtari,a0
 	tst.w deco_dcnt(a0)
@@ -60,6 +63,11 @@ DecoAnimation:
 	
 	REPT 1
 	lea   decoFantomes,a0
+	bsr.s decoRender
+	ENDR
+	
+	REPT 1
+	lea   decoPacgommes,a0
 	bsr.s decoRender
 	ENDR
 	
@@ -147,6 +155,11 @@ decoFantomes:
 decoBidules:
 	dc.w 6,2,0,0
 	INCBIN "elite\bidules.bmp"
+	EVEN
+
+decoPacgommes:
+	dc.w 13,193,0,0
+	INCBIN "elite\pacgomme.bmp"
 	EVEN
 
 	SECTION BSS
