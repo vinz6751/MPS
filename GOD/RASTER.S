@@ -1,13 +1,19 @@
 RASTER_DEBUG	EQU	0
+
+
+; D‚finitions
 HBL		EQU	$120
 
-rasterCouleurP EQU	$502 ;On utilise qqchose bas en RAM pour pouvoir
-		     ;ne transf‚rer que des word et b‚n‚ficier
-		     ;de l'extension de signe
+
+; Configuration
+CENTRE_HAUT	EQU	70
+CENTRE_BAS	EQU	90	
+
+
+; Programme de d‚bug
 	IFNE	RASTER_DEBUG
 VBL	EQU	$70
 
-	;Programme d'essai
 main	pea	.efface_ecran
 	move.w	#9,-(sp)
 	trap	#1	;Cconws
@@ -21,7 +27,6 @@ main	pea	.efface_ecran
 	trap	#1	;Pterm0
 
 .main	bsr	RasterInit
-	clr.w	$ffff8240.w
 	move.l	VBL.w,.oldVbl
 	move.l	#RasterVbl,VBL.w
 
@@ -48,16 +53,8 @@ main	pea	.efface_ecran
 
 
 RasterInit
-	; Calcule le d‚grad‚
-	move.l	#rasterCouleurs,rasterCouleurP.w
-	lea	rasterCouleurs,a3
-	move.w	#$0112,(a3)+
-	clr.w	(a3)+
-
-	; Installe vecteur HBL
+	; Sauve vecteur HBL
 	move.l	HBL.w,oldHbl
-	move.l	#RasterHbl,HBL.w
-	; Active les interruptions HBL
 	rts
 oldHbl	ds.l 1
 
@@ -69,11 +66,12 @@ RasterDeinit
 	rts
 
 
-RasterVbl	clr.w	$ffff8240.w
-	move.l	#rasterCouleurs,rasterCouleurP
+RasterVbl	; r‚initialise le raster
+	move.w	#$101,$ffff8240.w	
+	move.l	#rasterHblMilieu,HBL.w
 	ori.b	#1,$fffffa07.w ; enable HBL	
 	ori.b	#1,$fffffa13.w ; unmask HBL	
-	move.b 	#60,$fffffa21.w ; Timer B data : Counter value
+	move.b 	#CENTRE_HAUT,$fffffa21.w ; Timer B data : Counter value
 	move.b 	#8,$fffffa1b.w ; Timer B start : Event count mode
 	IFEQ	RASTER_DEBUG
 	rts
@@ -81,26 +79,18 @@ RasterVbl	clr.w	$ffff8240.w
 	rte
 	ENDC
 
-
-RasterHbl	move.l	a5,-(sp)
-	move.l	rasterCouleurP.w,a5
-	move.w	(a5)+,$ffff8240.w
-	beq.s	.stopHbl
-	bne.s	.cont
-	move.l	#rasterCouleurs,a5
-.cont	move.l	a5,rasterCouleurP.w
-	movea.l	(sp)+,a5
-	move.b 	#0,$fffffa1b.w 	;Timer B stop
-	move.b 	#90,$fffffa21.w 	;Timer B data : Counter value
-	move.b 	#8,$fffffa1b.w 	;Timer B start : Event count mode
-	bclr 	#0,$fffffa0f.w 	; acknowledge interrupt Timer B
-	rte
-.stopHbl	bclr	#0,$fffffa07.w	; disable HBL
-	move.b 	#0,$fffffa1b.w 	;Timer B stop
-	bclr 	#0,$fffffa0f.w 	; acknowledge interrupt Timer B
-	movea.l	(sp)+,a5
+rasterHblMilieu
+	clr.w	$ffff8240.w	;noir
+	move.b 	#0,$fffffa1b.w 	;stoppe Timer B
+	move.b 	#CENTRE_BAS,$fffffa21.w 	;valeur compteur Timer B
+	move.b 	#8,$fffffa1b.w 	;commence … compter les ‚vŠnements
+	bclr 	#0,$fffffa0f.w 	;fin interruption Timer B
+	move.l	#rasterHblBas,HBL.w
 	rte
 
-
-rasterCouleurs: ;Liste des couleurs pour chaque ligne. 0 marque la fin
-	ds.w 200+1
+rasterHblBas
+	move.w	#$101,$ffff8240.w	;remet la couleur du fond
+	bclr	#0,$fffffa07.w	;d‚sactive HBL
+	move.b 	#0,$fffffa1b.w 	;stoppe Timer B
+	bclr 	#0,$fffffa0f.w 	;fin interruption Timer B
+	rte
