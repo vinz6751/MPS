@@ -58,7 +58,8 @@ Main	move.l	sp,OldStack
 	bsr	EliteInit
 	bsr	ScrollInit
 	jsr	Cube3dInit
-
+	jsr	DecoInit
+	
 	clr.w	FlagQuitter
 BouclePrincipale
 	IFNE	DEBUG
@@ -73,7 +74,8 @@ BouclePrincipale
 	bsr	EliteAnimation
 	bsr	ScrollAnimation
 	jsr	Cube3dAnimation
-	
+	jsr	DecoAnimation
+		
 	bra.s	BouclePrincipale
 
 quitte		
@@ -88,6 +90,7 @@ quitte
 	bsr	VblDesinstalle
 	bsr	RasterDeinit
 	bsr	MusiqueDeinit
+	jsr	DecoDeinit
 	bsr	ScnRestore
 	bsr	ScnDeinit
 	RestaurePalette OldPalette
@@ -140,6 +143,7 @@ KbdRoutine
 	INCLUDE raster.s
 	INCLUDE musique.s
 	INCLUDE cube3d.s
+	INCLUDE deco.s
 			
 	SECTION DATA	
 	EVEN

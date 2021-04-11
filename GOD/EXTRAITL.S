@@ -196,7 +196,7 @@ len	DS.L	1
 handle	DS.W	1
 
 	SECTION DATA
-le	INCBIN elite\lettre-e.pi1
+le	INCBIN 	elite\lettre-e.pi1
 ll	INCBIN	elite\lettre-l.pi1
 li	INCBIN	elite\lettre-i.pi1
 lt	INCBIN	elite\lettre-t.pi1
@@ -209,7 +209,7 @@ nom_l	dc.b	"elite\l.bin",0
 nom_i	dc.b	"elite\i.bin",0
 nom_t	dc.b	"elite\t.bin",0
 nom_e2	dc.b	"elite\e2.bin",0
-nom_palette	dc.b	"elite\palette.bin",0
+nom_palette	dc.b "elite\palette.bin",0
 nom_scrollmsg 	dc.b "message.txt",0
 nom_scrollbin	dc.b "message.bin",0
 nom_bidules	dc.b "elite\bidules.pi1",0

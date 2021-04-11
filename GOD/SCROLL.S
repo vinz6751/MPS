@@ -44,20 +44,20 @@ ScrollAnimation
 	
 .scroll	lea	scrollBuf,a1
 	movea.l	BmpFb,a3
-	adda.l	#160*(Y_RES-1-FONT_H),a3
+	adda.l	#160*(Y_RES-1-FONT_H)-32,a3
 	moveq	#FONT_H-1,d3
 .boucle	;movea.l	a2,a3
 	; plan 0
 	lsl.w	(a1)+	; r‚cupŠre bit du plan 0
-sxo	SET	152 ; scroll x offset
-	REPT	20
+sxo	SET	152 	; scroll x offset
+	REPT	15
 	roxl	sxo(a3)	; insŠre en pixel 15 plan0 dernier chunk de ligne et d‚cale toute la ligne
 sxo	SET	sxo-8	; chunk pr‚c‚dent
 	ENDR
 	; plan 1
 	lsl.w	(a1)+	; meme chose plan 1
 sxo	SET	154
-	REPT	20
+	REPT	15
 	roxl	sxo(a3)
 sxo	SET	sxo-8
 	ENDR
