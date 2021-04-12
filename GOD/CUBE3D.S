@@ -98,7 +98,7 @@ Cube3dInit:
 	move.w #-3,c_xspeed(a0)
 	move.w #-5,c_yspeed(a0)
 	move.w #3,c_zspeed(a0)
-	move.w #7,c_couleur(a0)
+	move.w #3,c_couleur(a0)
 	move.w #-1,c_efface(a0)
 
 	; Initialisation cube 4	
@@ -112,7 +112,7 @@ Cube3dInit:
 	move.w #4,c_xspeed(a0)
 	move.w #3,c_yspeed(a0)
 	move.w #-4,c_zspeed(a0)
-	move.w #8,c_couleur(a0)
+	move.w #4,c_couleur(a0)
 	move.w #1,c_efface(a0)
 
 	ENDC
