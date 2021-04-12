@@ -12,4 +12,5 @@ MusiqueAnimation
 
 	SECTION DATA
 	EVEN
-zicSnd	INCBIN	.\ZICS\discord2.snd   ;test_zxx.snd
+zicSnd	;INCBIN	.\ZICS\discord2.snd   ;test_zxx.snd
+	INCBIN	"zics\waterdt2.snd"

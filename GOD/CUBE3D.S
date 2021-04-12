@@ -64,8 +64,9 @@ Cube3dInit:
 	lea    cube_model,a1
 	bsr    init_cube
 	lea    cube1,a0
-	move.w #64,c_xcenter(a0)
-	move.w #110-LIGNE1Y,c_ycenter(a0)
+	move.w #48,c_xcenter(a0)
+	move.w #LIGNEMY,c_ycenter(a0)
+	move.w c_ycenter(a0),c_ycentro(a0)
 	move.l #$00040003,c_xspeed(a0)
 	move.w #$0004,c_zspeed(a0)
 	move.w #1,c_couleur(a0)
@@ -77,8 +78,9 @@ Cube3dInit:
 	lea    cube_model,a1
 	bsr    init_cube
 	lea    cube2,a0
-	move.w #128,c_xcenter(a0)
-	move.w #120-LIGNE1Y,c_ycenter(a0)
+	move.w #112,c_xcenter(a0)
+	move.w #LIGNEMY,c_ycenter(a0)
+	move.w c_ycenter(a0),c_ycentro(a0)
 	move.w #-4,c_xspeed(a0)
 	move.w #3,c_yspeed(a0)
 	move.w #3,c_zspeed(a0)
@@ -91,7 +93,8 @@ Cube3dInit:
 	bsr    init_cube
 	lea    cube3,a0
 	move.w #192,c_xcenter(a0)
-	move.w #110-LIGNE1Y,c_ycenter(a0)
+	move.w #LIGNEMY,c_ycenter(a0)
+	move.w c_ycenter(a0),c_ycentro(a0)
 	move.w #-3,c_xspeed(a0)
 	move.w #-5,c_yspeed(a0)
 	move.w #3,c_zspeed(a0)
@@ -103,8 +106,9 @@ Cube3dInit:
 	lea    cube_model,a1
 	bsr    init_cube
 	lea    cube4,a0
-	move.w #256,c_xcenter(a0)
-	move.w #120-LIGNE1Y,c_ycenter(a0)
+	move.w #272,c_xcenter(a0)
+	move.w #LIGNEMY,c_ycenter(a0)
+	move.w c_ycenter(a0),c_ycentro(a0)
 	move.w #4,c_xspeed(a0)
 	move.w #3,c_yspeed(a0)
 	move.w #-4,c_zspeed(a0)
@@ -141,6 +145,7 @@ init_cube:
 	
 	rts
 
+
 Cube3dDeinit:
 	rts
 
@@ -151,17 +156,19 @@ Cube3dAnimation:
 ;	move.w #10,cube3d_limiteur
 ;	clr.b  cube3d_limiteur
 
+	; On ne redessine pas tous les cubes … chaque it‚ration
+	; Le cube3d shifter est un mask de bit qu'on fait tourner
+	; et … chaque bit correspond un cube. Si le bit est allum‚,
+	; on anime le cube correspondant.
+	
 	move.b cube3d_shifter(pc),d0
 	rol.b  #1,d0
 	move.b d0,cube3d_shifter
 	andi.b #$0f,d0
-	
+		
 	btst   #0,d0
 	beq.s   .skip1
 	lea    cube1(pc),a6
-;	move.w Elite_ye2,d2
-;	addi.w  #10,d2
-;	move.w d2,c_ycenter(a6)
 	bsr    anime_cube
 	bra.s  .fin
 .skip1
@@ -266,6 +273,7 @@ anime_cube:
 	add.w  d3,d1            ;Calcul x.sin(gamma) + y.cos(gamma)
 	asr.w  #7,d1            ;Mise … jour de y --> d1
 
+	move.w c_ycenter(a6),c_ycentro(a6)
 	add.w  c_xcenter(a6),d0 ;Offset de centre d'‚cran
 	add.w  c_ycenter(a6),d1 ;idem en vertical
 	add.w  ligne1y,d1	    ;D‚cale verticalement suivant la bande noire
@@ -313,23 +321,13 @@ model_draw
           rts
 	
 	
-
-efface	;Efface la figure en a6, carr‚d e 64px de haut
-	; d0.w: x (mod 16 = 0)  d1.w: y  d2.w: nombre de lignes -1
-	; Affecte d1-d2/a0-a1
-	move.w	c_ycenter(a6),d1
-	add.w	ligne1y,d1
-	subi.w	#33,d1
-	lea	bmpLineYOffsets(pc),a1
-	add.w	d1,d1		; tableau de mots
-	move.w	(a1,d1.w),a1	; offset ligne
-	adda.l	BmpFb(pc),a1	; frame buffer
-	move.w	c_xcenter(a6),d0
-	subi.w	#28,d0
-	andi.w	#$fff0,d0	;trouve le num‚ro de groupe
-	lsr.w	#1,d0
-	andi.w	#-2,d0	;il faut ˆtre pair pour utiliser .w ou .l
-	add.w	d0,a1	   ;ajout x
+efface2	; Efface la zone noire
+	move.w	ligne2y,d1
+	move.l	a6,-(sp)
+	lea	bmpLineYOffsets(pc),a6
+	add.w	d1,d1
+	move.w	(a6,d1.w),a6
+	adda.l	BmpFb(pc),a6
 	
 	moveq	#0,d0
 	moveq	#0,d1
@@ -339,8 +337,49 @@ efface	;Efface la figure en a6, carr‚d e 64px de haut
 	moveq	#0,d5
 	moveq	#0,d6
 	moveq	#0,d7
-	lea	160*64+8*4(a1),a1
-	REPT	64
+	move.l	d0,a0
+	move.l	d0,a1
+	move.l	d0,a2
+	move.l	d0,a3
+	move.l	d0,a4
+	move.l	d0,a5 ; 14 registers	
+;	REPT	(LIGNE2Y-LIGNE1Y)*160/(14*4)
+	REPT	(170-79)*160/(14*4)
+	movem.l	d0-d7/a0-a5,-(a6)
+	ENDR		
+	move.l	(sp)+,a6
+	rts
+
+efface	;Efface la figure en a6, carr‚d de 64px de haut
+	;Les cubes sont dans des carr‚s de 64 pixels dispos‚s tous
+	;les 72 pixels … partir de 16 pixels (16,88,160,232
+	; d0.w: x (mod 16 = 0)  d1.w: y  d2.w: nombre de lignes -1
+	; Affecte d1-d2/a0-a1
+CUBEBOXH	EQU 69
+	move.w	c_ycentro(a6),d1
+	add.w	ligne1y,d1
+	subi.w	#CUBEBOXH/2+2,d1
+	lea	bmpLineYOffsets(pc),a1
+	add.w	d1,d1		; tableau de mots
+	move.w	(a1,d1.w),a1	; offset ligne
+	adda.l	BmpFb(pc),a1	; frame buffer
+	move.w	c_xcenter(a6),d0
+	subi.w	#32,d0	; d‚but de la zone
+	andi.w	#$fff0,d0
+	lsr.w	#1,d0
+	andi.w	#-2,d0	;il faut ˆtre pair pour utiliser .w ou .l
+	adda.w	d0,a1	   ;ajout x
+
+	moveq	#0,d0
+	move.l	d0,d1
+	move.l	d0,d2
+	move.l	d0,d3
+	move.l	d0,d4
+	move.l	d0,d5
+	move.l	d0,d6
+	move.l	d0,d7
+	lea	160*CUBEBOXH+8*4(a1),a1
+	REPT	CUBEBOXH
 	movem.l	d0-d7,-(a1)
 	lea	-160+8*4(a1),a1
 	ENDR
@@ -356,6 +395,7 @@ cube3d_shifter  dc.b %10001000
 	rsreset
 c_xcenter	rs.w 1  ;X centre
 c_ycenter	rs.w 1  ;Y centre
+c_ycentro rs.w 1  ;Y centre ancien
 c_couleur	rs.w 1  ;No de couleur
 c_efface  rs.w 1  ;Indique s'il faut effacer ou pas avant de dessiner
 c_x_alpha rs.w 1  ;Angle axe X

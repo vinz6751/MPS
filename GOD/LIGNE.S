@@ -1,6 +1,7 @@
 	SECTION TEXT
-LIGNE1Y	EQU	69
-LIGNE2Y	EQU	161
+LIGNE1Y	EQU	79
+LIGNE2Y	EQU	170
+LIGNEMY	EQU	(LIGNE2Y-LIGNE1Y)/2
 LIGNE_RALENTISSEUR EQU 7
 	
 LigneInit:
@@ -28,7 +29,7 @@ LigneAnimation:
 	move.w	ligneh_angle,d2
 	move.b	(a0,d2.w),d1
 	ext.w	d1
-	asr.w	#4,d1 ; r‚duit l'amplitude … 8
+	asr.w	#3,d1 ; r‚duit l'amplitude … 8
 	addi.w	#LIGNE1Y,d1
 	; pr‚pare prochaine it‚ration
 	addq.b	#2,d2
