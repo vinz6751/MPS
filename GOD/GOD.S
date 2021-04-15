@@ -45,9 +45,8 @@ Main	move.l	sp,OldStack
 	; Fixe l'adresse logique pour le dessin
 	move.l	ScnFb,BmpFb
 
-	; D‚sactive Timer C
-	andi.b #%11011111,$fffffa09.w
-
+	move.b	#$12,$fffffc02.w    ; d‚sactive rapport souris
+	andi.b #%11011111,$fffffa09.w ; d‚sactive timer C
 	
 	RestaurePalette ElitePalette
 	bsr	RasterInit
@@ -104,7 +103,8 @@ quitte
 	ENDC
 	
 	; R‚active timer C
-	ori.b #%00100000,$fffffa09.w
+	ori.b  	#%00100000,$fffffa09.w ; r‚active timer C
+	move.b	#$08,$fffffc02.w        ; r‚active souris
 
 	rts	 ; Retour de la fonction principale
 
