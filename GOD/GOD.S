@@ -45,6 +45,9 @@ Main	move.l	sp,OldStack
 	; Fixe l'adresse logique pour le dessin
 	move.l	ScnFb,BmpFb
 
+	; D‚sactive Timer C
+	andi.b #%11011111,$fffffa09.w
+
 	
 	RestaurePalette ElitePalette
 	bsr	RasterInit
@@ -99,6 +102,10 @@ quitte
 	RestaurePalette OldPalette
 	move.l	OldStack,sp
 	ENDC
+	
+	; R‚active timer C
+	ori.b #%00100000,$fffffa09.w
+
 	rts	 ; Retour de la fonction principale
 
 VblInstalle
