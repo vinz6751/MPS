@@ -11,19 +11,20 @@ image$=STRING$(32000,0)
 '
 '
 fichier$=dossier$+"bidules.pi1"
-@extraction_chunky("atari.bmp",90,13,135,56)
-@extraction_chunky("bidules.bmp",257,2,314,57)
-@extraction_chunky("pacmano.bmp",24,157,49,180)
-@extraction_chunky("pacmanf.bmp",56,157,82,180)
-@extraction_chunky("fantomes.bmp",86,157,208,180)
-@extraction_chunky("ppacmano.bmp",18,100,29,110)
-@extraction_chunky("ppacmanf.bmp",33,100,44,110)
-@extraction_chunky("pfantome.bmp",47,100,104,110)
+' @extraction_chunky("atari.bmp",90,13,135,56)
+' @extraction_chunky("bidules.bmp",257,2,314,57)
+' @extraction_chunky("pacmano.bmp",24,157,49,180)
+' @extraction_chunky("pacmanf.bmp",56,157,82,180)
+' @extraction_chunky("fantomes.bmp",86,157,208,180)
+' @extraction_chunky("ppacmano.bmp",18,100,29,110)
+' @extraction_chunky("ppacmanf.bmp",33,100,44,110)
+' @extraction_chunky("pfantome.bmp",47,100,104,110)
+' @extraction_chunky("pacgomme.bmp",4,195,25,198)
 '
 ' Extraction lignes
 fichier$=dossier$+"line.pi1"
 @extraction_planar("line1.bmp",0,0,319,0)
-@extraction_planar("line2.bmp",0,13,319,17)
+' @extraction_planar("line2.bmp",0,13,319,17)
 '
 '
 PROCEDURE extraction_chunky(fichier_sortie$,x1&,y1&,x2&,y2&)
@@ -81,7 +82,6 @@ PROCEDURE extraction_planar(fichier_sortie$,x1&,y1&,x2&,y2&)
   LOCAL ecran$
   LOCAL oldrez%
   LOCAL sortie$
-  LOCAL w&,h&
   LOCAL longueur_sortie&
   LOCAL i_sortie&
   LOCAL ix&,iy&
@@ -102,25 +102,17 @@ PROCEDURE extraction_planar(fichier_sortie$,x1&,y1&,x2&,y2&)
   ' Affiche l'image pour que POINT fonctionne
   SPUT image$
   '
-  ' cr‚e le fichier de sortie et ‚crit l'en-tˆte (w et h)
+  ' cr‚e le fichier de sortie
   '
-  w&=x2&-x1&+1
-  h&=y2&-y1&+1
   fb%=XBIOS(3) ! adresse de l'‚cran
-  longueur_sortie&=4+w&*h& ! 4 est la longueur de l'en-tˆte
-  sortie$=STRING$(longueur_sortie&,0)
-  '
-  ' ‚crit l'en-tˆte
-  DPOKE VARPTR(sortie$),w&
-  DPOKE VARPTR(sortie$)+2,h&
+  longueur_sortie&=160
+  sortie$=STRING$(320,0)
   i_sortie&=4 ! 2*sizeof(word)
   '
   ' ‚crit un octet par pixel avec le num‚ro de couleur
   FOR iy&=y1& TO y2&
     yoffset=@line_address(fb%,iy&)
-    g1&=x1&*iy& MOD 16
-    g2&=x2&*iy& MOD 16
-    FOR ix&=g1& TO g2&
+    FOR ix&=0 TO 320-2 STEP 2
       DPOKE VARPTR(sortie$)+i_sortie&,DPEEK(fb%+yoffset%+ix&)
       i_sortie&=i_sortie&+2
     NEXT ix&
