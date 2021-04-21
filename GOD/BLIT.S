@@ -62,7 +62,7 @@ BlitShiftDown32_1px
 	clr.l	(a0)+
 	clr.l	(a0)
 	rts
-	ENDC
+
 
 BlitCalcOffset
 	; Calcule l'offset dans la m‚morie ‚cran x,y
@@ -85,3 +85,5 @@ b1610l	SET	0	; Offset de ligne
 b1610l	SET	b1610l+160
 	ENDR
 	rts
+
+	ENDC

@@ -1,5 +1,5 @@
 ; Outil d'extraction des lettres de ELITE et de la palette
-	OUTPUT extrait.tos
+	OUTPUT f:\mps\god\extrait.tos
 
 X	EQU	0
 Y	EQU	0
@@ -92,6 +92,59 @@ xe2:	lea	le2+34,a0 ; passe 2 octets en tˆte plus 32 palette
 	add.l	#16,len
 	ENDR
 	SAUVE	nom_e2
+
+logoAnimation:
+	lea	logoanim+34,a4
+	lea	buf,a5
+	
+	moveq	#48-1,d6 ; hauteur en pixels
+.blcl1	movea.l	a4,a6	
+	REPT 3		; 3*16=48 pixels
+	move.l	(a6)+,(a5)+
+	move.l	(a6)+,(a5)+ ; 16 pixels
+	ENDR
+	lea	160(a4),a4 ; ligne suivante
+	dbra	d6,.blcl1
+	move.l	#48*48,len
+	SAUVE	nom_logo1
+	
+	lea	buf,a5
+	moveq	#48-1,d6 ; hauteur en pixels
+.blcl2	movea.l	a4,a6
+	REPT 3		; 3*16=48 pixels
+	move.l	(a6)+,(a5)+
+	move.l	(a6)+,(a5)+ ; 16 pixels
+	ENDR
+	lea	160(a4),a4 ; ligne suivante
+	dbra	d6,.blcl2
+	move.l	#48*48,len
+	SAUVE	nom_logo2
+
+	lea	buf,a5
+	moveq	#48-1,d6 ; hauteur en pixels
+.blcl3	movea.l	a4,a6	
+	REPT 3		; 3*16=48 pixels
+	move.l	(a6)+,(a5)+
+	move.l	(a6)+,(a5)+ ; 16 pixels
+	ENDR
+	lea	160(a4),a4 ; ligne suivante
+	dbra	d6,.blcl3
+	move.l	#48*48,len
+	SAUVE	nom_logo3
+	
+	lea	buf,a5
+	moveq	#48-1,d6 ; hauteur en pixels
+.blcl4	movea.l	a4,a6	
+	REPT 3		; 3*16=48 pixels
+	move.l	(a6)+,(a5)+
+	move.l	(a6)+,(a5)+ ; 16 pixels
+	ENDR
+	lea	160(a4),a4 ; ligne suivante
+	dbra	d6,.blcl4
+	move.l	#48*48,len
+	SAUVE	nom_logo4
+	
+
 
 alien:	; gros alien rouge. Il est avec la couleur 7 donc on va 
 	Fopen	nom_bidules
@@ -202,6 +255,7 @@ li	INCBIN	elite\lettre-i.pi1
 lt	INCBIN	elite\lettre-t.pi1
 le2	INCBIN	elite\lettr-e2.pi1
 palette	INCBIN	font\font3.pi1
+logoanim	INCBIN	elite\anim-48b.pi1
 	EVEN
 
 nom_e	dc.b	"elite\e.bin",0
@@ -214,3 +268,8 @@ nom_scrollmsg 	dc.b "message.txt",0
 nom_scrollbin	dc.b "message.bin",0
 nom_bidules	dc.b "elite\bidules.pi1",0
 nom_alien		dc.b "alien.bin",0
+nom_logoanim	dc.b "elite\logoanim.pi1",0
+nom_logo1		dc.b "elite\logo1.bmp",0
+nom_logo2		dc.b "elite\logo2.bmp",0
+nom_logo3		dc.b "elite\logo3.bmp",0
+nom_logo4		dc.b "elite\logo4.bmp",0

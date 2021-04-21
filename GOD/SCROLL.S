@@ -61,7 +61,7 @@ sxo	SET	154
 	roxl	sxo(a3)
 sxo	SET	sxo-8
 	ENDR
-	; plan 2
+
 	lea	4(a1),a1	; ignore plans 2 et 3
 	lea	160(a3),a3 ; ligne suivante
 	dbra	d3,.boucle
@@ -95,7 +95,7 @@ offset	SET	offset+10*4
 	rts		
 	
 	SECTION DATA
-scrollMessage	;dc.b "ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789 .,-!'? CECI EST UN MESSAGE A SCROLLER ! BON C'EST PAS TOP MAIS C'EST MON PREMIER ECRAN !! MPS POWER !!   ",0
+scrollMessage	
 	; Message … afficher, produit par l'outil EXTRAITL.S pour
 	; remplacer les codes ASCII par des num‚ros de cellule dans le fichier FONT.BIN
 	INCBIN	message.bin

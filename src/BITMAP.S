@@ -409,7 +409,7 @@ BmpClearLineStLow ; Efface la ligne en d0
 	EVEN
 BmpFb		ds.l	1	; Adresse de la m‚moire vid‚o o— dessiner
 bmpLineYOffsets	ds.l	Y_RES	; Offset des lignes dans la m‚moire ‚cran en basse r‚solution
-bmpPointBuf	ds.w	X_RES*2 + 1 ; Buffer de points. Doit ˆtre:
+bmpPointBuf	ds.w	X_RES*4 + 1 ; Buffer de points. Doit ˆtre:
 	; - >= X_RES pour les lignes traversant l'‚cran
 	; - Un multiple de 8 car quand on dessine les cercles on stocke 8 points d'un coup.
 	; - +1 pour le marqueur de fin $ffff

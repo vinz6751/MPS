@@ -42,18 +42,18 @@ LigneAnimation:
 	move.w	d0,-(sp)   ; sauve d0 (ancienne position)
 	move.w	d1,ligne1y ; sauve d1 (nouvelle position)
 
-	bsr	BmpClearLineStLow ; efface ancienne position
+;	bsr	BmpClearLineStLow ; efface ancienne position
 	move.w	ligne1y(pc),d1
-	bsr.s	.dessine ; dessine la nouvelle
+;	bsr.s	.dessine ; dessine la nouvelle
 
 	; efface la ligne du bas
 	move.w	(sp),d0
 	addi.w	#LIGNE2Y-LIGNE1Y,d0
-	bsr	BmpClearLineStLow ; efface anciene position
+;	bsr	BmpClearLineStLow ; efface ancienne position
 	move.w	ligne1y(pc),d1
 	addi.w	#LIGNE2Y-LIGNE1Y,d1
 	move.w	d1,ligne2y
-	bsr.s	.dessine ; dessine la nouvelle
+;	bsr.s	.dessine ; dessine la nouvelle
 	addq.l	#2,sp
 .nodraw1
 

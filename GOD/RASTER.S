@@ -5,14 +5,15 @@ RASTER_DEBUG	EQU	0
 HBL		EQU	$120
 
 
-; Configuration
-;CENTRE_HAUT	EQU	70
-;CENTRE_BAS	EQU	90	
 
 
 ; Programme de d‚bug
 	IFNE	RASTER_DEBUG
 VBL	EQU	$70
+; Configuration
+LIGNE1Y	EQU	70
+LIGNE2Y	EQU	90	
+
 
 main	pea	.efface_ecran
 	move.w	#9,-(sp)
@@ -43,12 +44,14 @@ main	pea	.efface_ecran
 .quitte	move.l	oldHbl(pc),HBL.w
 	move.l	.oldVbl(pc),VBL.w
 	bsr	RasterDeinit
-	move.w	#-1,$ffff8240
+	move.w	#-1,$ffff8240.w
 	rts
 
 .efface_ecran dc.b 27,'E',0
 	EVEN
 .oldVbl	ds.l 1
+ligne1y	dc.w $70
+	EVEN
 	ENDC
 
 
@@ -68,7 +71,7 @@ RasterDeinit
 
 RasterVbl	; r‚initialise le raster
 	move.w	#$101,$ffff8240.w	
-	move.l	#rasterHblMilieu,HBL.w
+	move.l	#rasterHblHautLigne,HBL.w
 	ori.b	#1,$fffffa07.w ; enable HBL	
 	ori.b	#1,$fffffa13.w ; unmask HBL	
 	move.b 	ligne1y+1,$fffffa21.w ; Timer B data. ligne1y est un mot
@@ -79,10 +82,29 @@ RasterVbl	; r‚initialise le raster
 	rte
 	ENDC
 
-rasterHblMilieu
+rasterHblHautLigne
+	move.w	#-1,$ffff8240.w	;blanc
+	move.b 	#0,$fffffa1b.w 	;stoppe Timer B
+	move.b 	#1,$fffffa21.w 	;valeur compteur Timer B
+	move.b 	#8,$fffffa1b.w 	;commence … compter les ‚vŠnements
+	bclr 	#0,$fffffa0f.w 	;fin interruption Timer B
+	move.l	#rasterHblMilieuNoir,HBL.w
+	rte
+
+rasterHblMilieuNoir
 	clr.w	$ffff8240.w	;noir
 	move.b 	#0,$fffffa1b.w 	;stoppe Timer B
 	move.b 	#LIGNE2Y-LIGNE1Y-1,$fffffa21.w 	;valeur compteur Timer B
+	move.b 	#8,$fffffa1b.w 	;commence … compter les ‚vŠnements
+	bclr 	#0,$fffffa0f.w 	;fin interruption Timer B
+	move.l	#rasterHblBasLigne,HBL.w
+	rte
+
+
+rasterHblBasLigne
+	move.w	#-1,$ffff8240.w	;blanc
+	move.b 	#0,$fffffa1b.w 	;stoppe Timer B
+	move.b 	#1,$fffffa21.w 	;valeur compteur Timer B
 	move.b 	#8,$fffffa1b.w 	;commence … compter les ‚vŠnements
 	bclr 	#0,$fffffa0f.w 	;fin interruption Timer B
 	move.l	#rasterHblBas,HBL.w

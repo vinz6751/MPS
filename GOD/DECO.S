@@ -8,10 +8,7 @@ DECO_DEBUG EQU 0
 	ENDC
 
 	SECTION TEXT
-DecoInit:
-	lea    decoAtari,a0
-	bsr.s  .initDeco
-	
+DecoInit:	
 	lea    decoBidules,a0
 	bsr.s  .initDeco
 	
@@ -25,12 +22,7 @@ DecoInit:
 	bsr.s  .initDeco
 
 	IFNE DECO_DEBUG
-.boucle	lea decoAtari,a0
-	tst.w deco_dcnt(a0)
-	beq.s quit
-	bsr.s   decoRender
-	bra.s .boucle
-quit	bsr.s DecoDeinit
+.quit	bsr.s DecoDeinit
  	clr.w -(sp)
 	trap #1	
 	ENDC
@@ -45,12 +37,7 @@ DecoDeinit:
 	rts
 
 	
-DecoAnimation:
-	REPT 4
-	lea   decoAtari,a0
-	bsr.s decoRender
-	ENDR
-	
+DecoAnimation:	
 	REPT 4
 	lea   decoBidules,a0
 	bsr.s decoRender
@@ -128,16 +115,6 @@ decoBuf:	; Buffer pour appel de BmpPixelPutMono
 	dc.w -1
 		
 	SECTION DATA
-	
-decoAtari:   
-	IFNE DECO_DEBUG
-	dc.w	3,3,0,0,2,2
-	dc.b	1,0,0,1
-	ENDC
-	
-	dc.w 270,6,0,0
-	INCBIN "elite\atari.bmp"
-	EVEN
 	
 decoPacmanO:
 	dc.w 0,189,0,0	
