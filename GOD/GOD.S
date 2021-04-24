@@ -52,31 +52,10 @@ Main	move.l	sp,OldStack
 	RestaurePalette ElitePalette
 	bsr	ScnEfface
 
-	IFNE	1	
-intro	
-	move.w	#10000,d7
-.waiter	nop
-	dbra	d7,.waiter
-	
-	move.w	.rayon(pc),d3
-	addi.w	#1,d3
-	cmp.b	#99,d3
-	bgt.s	.finintro
-	move.w	d3,.rayon
-	
-	move.w	#160,d1 ; x
-	move.w	#100,d2 ; y
-	move.w	.couleur(pc),d0 ; couleur
-	addq.w	#1,d0
-	andi.w	#$f,d0
-	move.w	d0,.couleur
-	bsr	BmpCircle
-	bra.s	intro
-.rayon	dc.w	0
-.couleur	dc.w	1
-.finintro	
-	ENDC	
-	
+	jsr	Intro
+
+ 	RestaurePalette ElitePalette
+		
 	bsr	RasterInit
 	bsr	VblInstalle
 	bsr	MusiqueInit
@@ -188,6 +167,7 @@ KbdRoutine
 	INCLUDE deco.s
 	INCLUDE ligne.s
 	INCLUDE logo.s
+	INCLUDE intro.s
 			
 	SECTION DATA	
 	EVEN

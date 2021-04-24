@@ -31,7 +31,7 @@ el_bmp	rs.l	1 ;pointeur vers l'image … blitter
 el_sizeof	rs.b	1
 
 
-el_Elite	dc.w	1,32,10,38
+el_Elite	dc.w	1,32,6,42
 	dc.l	Elite
 el_eLite	dc.w	1,48,6,41
 	dc.l	eLite
