@@ -19,19 +19,21 @@ FBSIZE	EQU	32000
 
 
 	; Pr‚f‚rences
-DEBUG	EQU	1
+DEBUG	EQU	0
 CLIPPING	EQU 	0 ; Dans bitmap.s
+
 
 	SECTION TEXT
 _main	
 	IFNE	DEBUG
 	KbdFlush
+	ENDC
+	
 	Supexec	Main
 	Pterm0	
 
 Main	move.l	sp,OldStack
 	SauvePalette OldPalette
-	ENDC
 
 	; Initialise l'‚cran
 	lea	Stack,sp
@@ -43,28 +45,27 @@ Main	move.l	sp,OldStack
 	lea	Fb,a0
 	bsr	ScnSet	
 
-	; Fixe l'adresse logique pour le dessin
+	; Initialise l'‚cran
 	move.l	ScnFb,BmpFb
-
-	move.b	#$12,$fffffc02.w    ; d‚sactive rapport souris
-	andi.b #%11011111,$fffffa09.w ; d‚sactive timer C
-	
 	RestaurePalette ElitePalette
 	bsr	ScnEfface
 
+	; D‚sactive interruptions non n‚cessaires
+	move.b	#$12,$fffffc02.w    ; rapport souris
+	andi.b #%11011111,$fffffa09.w ; timer C
+	
+
 	jsr	Intro
 
- 	RestaurePalette ElitePalette
-		
+ 	RestaurePalette ElitePalette		
+	bsr	ScnEfface
+
 	bsr	RasterInit
-	bsr	VblInstalle
 	bsr	MusiqueInit
+	bsr	VblInstalle
 	IFEQ	DEBUG
 	bsr	KbdInstalle
-	ENDC
-	bsr	ScnEfface
-		
-;	bsr	AlienInit
+	ENDC	
 	bsr	EliteInit
 	bsr	ScrollInit
 	jsr	Cube3dInit
@@ -82,7 +83,6 @@ BouclePrincipale
 	bne.s	quitte
 	ENDC
 	
-;	bsr	AlienAnimation
 	bsr	EliteAnimation
 	bsr	ScrollAnimation
 	jsr	Cube3dAnimation
@@ -97,21 +97,18 @@ quitte
 	bsr	KbdDesinstalle
 	ENDC
 
-	IFNE	DEBUG
 	jsr	Cube3dDeinit
 	bsr	ScrollDeinit
-;	bsr	AlienDeinit
 	bsr	VblDesinstalle
 	bsr	RasterDeinit
 	bsr	MusiqueDeinit
 	jsr	DecoDeinit
-;	jsr	LigneDeinit
+	jsr	LigneDeinit
 	bsr	ScnRestore
 	bsr	ScnDeinit
 	bsr	LogoDeinit
 	RestaurePalette OldPalette
 	move.l	OldStack,sp
-	ENDC
 	
 	; R‚active timer C
 	ori.b  	#%00100000,$fffffa09.w ; r‚active timer C
@@ -119,14 +116,17 @@ quitte
 
 	rts	 ; Retour de la fonction principale
 
+
 VblInstalle
 	move.l	VBL.w,OldVbl
 	move.l	#VblRoutine,VBL.w
 	rts
 
+
 VblDesinstalle
 	move.l	OldVbl,VBL.w
 	rts
+
 	
 VblRoutine
 	bsr	RasterVbl
@@ -134,14 +134,17 @@ VblRoutine
 	move.l	OldVbl,-(sp)
 	rts
 
+
 KbdInstalle
 	move.l	KBD_VECS.w,OldKbdVecs
 	move.l	#KbdRoutine,KBD_VECS.w
 	rts
 
+
 KbdDesinstalle
 	move.l	OldKbdVecs,KBD_VECS.w
 	rts
+
 
 KbdRoutine
 	move.w	d0,-(sp)
@@ -157,9 +160,8 @@ KbdRoutine
 	; Modules
 	INCLUDE ..\src\scn.s	 ; Gestion de l'‚cran
 	INCLUDE ..\src\bitmap.s	 ; Dessin
-	;INCLUDE alien.s		 ; Alien
 	INCLUDE elite.s		 ; Logo Elite
-	INCLUDE blit.s		 ; Fonctions de 
+	INCLUDE blit.s		 ; Fonctions de copie de m‚moire ‚cran
 	INCLUDE scroll.s	 ; Scroll texte
 	INCLUDE raster.s
 	INCLUDE musique.s
@@ -168,9 +170,6 @@ KbdRoutine
 	INCLUDE ligne.s
 	INCLUDE logo.s
 	INCLUDE intro.s
-			
-	SECTION DATA	
-	EVEN
 
 	SECTION BSS
 	EVEN

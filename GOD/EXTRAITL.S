@@ -70,7 +70,7 @@ xi:	lea	li+34,a0 ; passe 2 octets en tˆte plus 32 palette
 xt:	lea	lt+34,a0 ; passe 2 octets en tˆte plus 32 palette
 	lea	buf,a1
 	clr.l	len	
-	REPT 35
+	REPT 45
 	move.l	(a0),(a1)+	
 	move.l	4(a0),(a1)+	; 16 pixels
 	move.l	8(a0),(a1)+

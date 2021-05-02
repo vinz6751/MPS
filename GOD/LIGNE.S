@@ -18,6 +18,9 @@ LigneInit:
 	movem.l	d0-d7/a2-a6,ligne1_4
 	rts
 
+LigneDeinit:
+	rts
+
 LigneAnimation:
 ;	subi.w	#1,ligneralentisseur
 ;	beq.s	.fait

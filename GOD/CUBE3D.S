@@ -51,9 +51,11 @@ fin	bsr    Cube3dDeinit
 	bsr    ScnRestore
 	bsr    ScnDeinit
 	rts
-	SECTION TEXT
 	ENDC
 ********** FIN DU PROG DE DEBUG ***************
+
+
+	SECTION TEXT
 	
 Cube3dInit:
 	;
@@ -168,25 +170,25 @@ Cube3dAnimation:
 		
 	btst   #0,d0
 	beq.s   .skip1
-	lea    cube1(pc),a6
+	lea    cube1,a6
 	bsr    anime_cube
 	bra.s  .fin
 .skip1
 	btst   #1,d0
 	beq.s  .skip2
-	lea    cube2(pc),a6
+	lea    cube2,a6
 	bsr    anime_cube
 	bra.s  .fin
 .skip2
 	btst   #2,d0
 	beq.s  .skip3
-	lea    cube3(pc),a6
+	lea    cube3,a6
 	bsr    anime_cube
 	bra.s  .fin
 .skip3
 	btst   #3,d0
 	beq.s  .skip4
-	lea    cube4(pc),a6
+	lea    cube4,a6
 	bsr    anime_cube
 .skip4	
 .fin	rts
@@ -292,7 +294,7 @@ anime_cube:
 
 .draw    	;Dessine la figure
 	movea.l c_newpts(a6),a3    ;Nouvelles coordonn‚es
-	lea     linebuf(pc),a0
+	lea     linebuf,a0
 	move.w  c_couleur(a6),d0
 ;	addq.b  #1,d0
 ;	andi.b  #$f,d0
@@ -306,7 +308,7 @@ model_draw
 	; a3: est la liste de points … utiliser pour le rendu
 	; d0: num‚ro de couleur
           lea     c_nlignes(a6),a4   ;D‚but de la liste de lignes
-	lea     linebuf(pc),a0
+	lea     linebuf,a0
           move.w  (a4)+,d4           ;Nombre-1 de lignes … tracer
 	movea.l (a4),a4	       ;Indirection liste de lignes
 .drawlp  	move.w  (a4)+,d5           ;Lecture no de point d‚but
@@ -324,10 +326,10 @@ model_draw
 efface2	; Efface la zone noire
 	move.w	ligne2y,d1
 	move.l	a6,-(sp)
-	lea	bmpLineYOffsets(pc),a6
+	lea	bmpLineYOffsets,a6
 	add.w	d1,d1
 	move.w	(a6,d1.w),a6
-	adda.l	BmpFb(pc),a6
+	adda.l	BmpFb,a6
 	
 	moveq	#0,d0
 	moveq	#0,d1
@@ -359,10 +361,10 @@ CUBEBOXH	EQU 69
 	move.w	c_ycentro(a6),d1
 	add.w	ligne1y,d1
 	subi.w	#CUBEBOXH/2+2,d1
-	lea	bmpLineYOffsets(pc),a1
+	lea	bmpLineYOffsets,a1
 	add.w	d1,d1		; tableau de mots
 	move.w	(a1,d1.w),a1	; offset ligne
-	adda.l	BmpFb(pc),a1	; frame buffer
+	adda.l	BmpFb,a1	; frame buffer
 	move.w	c_xcenter(a6),d0
 	subi.w	#32,d0	; d‚but de la zone
 	andi.w	#$fff0,d0
@@ -387,7 +389,7 @@ CUBEBOXH	EQU 69
 	rts
 		
 	
-	SECTION   DATA
+;	SECTION   DATA
 cube3d_shifter  dc.b %10001000
 	EVEN
 	

@@ -62,7 +62,7 @@ BlitShiftDown32_1px
 	clr.l	(a0)+
 	clr.l	(a0)
 	rts
-
+	ENDC
 
 BlitCalcOffset
 	; Calcule l'offset dans la m‚morie ‚cran x,y
@@ -75,6 +75,7 @@ BlitCalcOffset
 	add.l	BmpFb,d0
 	rts
 	
+	IFNE 0 ; inutilis‚
 Blit16x10	; Blitte le bloc de 16x10 pixels point‚ par a0 vers l'adresse
 	; point‚e par a1
 	; N'affecte rien

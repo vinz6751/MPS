@@ -130,7 +130,7 @@ decoFantomes:
 	EVEN
 
 decoBidules:
-	dc.w 6,2,0,0
+	dc.w 0,0,0,0
 	INCBIN "elite\bidules.bmp"
 	EVEN
 
