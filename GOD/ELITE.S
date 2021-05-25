@@ -6,19 +6,11 @@ EL_BUMP	EQU -5
 EliteInit
 	rts
 
-EliteAnimation ; affiche les "elite"
-
-	; d‚tecte les changements de z
-	bsr	MusiqueGetZ
-	cmp.b	.zprecedent(pc),d0
-	beq.s	.zpaschange
-	move.b	d0,.zprecedent
-	cmp.b	#1,d0 ; Z1: fait trembler ELITE
-	bne.s	.zpasreconnu
+EliteBump ; Fait sauter le logo
 	move.w	#EL_BUMP,el_Elite+el_bump
-.zpaschange
-.zpasreconnu
+	rts
 
+EliteAnimation ; affiche les "elite"
 	subi.w	#1,.ralentisseur
 	beq.s	.fait
 	rts		

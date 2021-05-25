@@ -58,7 +58,7 @@ BmpPixelPutMono:
 	; a0 pointe vers un tableau de paires (x.w,y.w).
 	; Quand x > 32767 on arrˆte
 	; d0.w est la couleur d‚sir‚e.
-	; Affecte d0.w d1.l d2.l a0-a3
+	; Affecte d0.w d1.l d2.l a0-a4
 	lea	bmpLineYOffsets,a1	; Offset des lignes	
 	lea	.bp4_couleurs,a2 	; Tableau des routines de couleur
 	add.w	d0,d0
@@ -90,8 +90,9 @@ BmpPixelPutMono:
 	andi.w	#$f,d2		; d2: num‚ro du bit dans le plan
 	add.w	d2,d2
 	add.w	d2,d2
-	move.l	(a2,d2.w),-(sp)
-.fin	rts			; plus efficace qu'un jsr
+	move.l	(a2,d2.w),a4
+	jmp	(a4)
+.fin	rts
 	include	..\src\bp4.s ; Routines de dessin de pixel, une par couleur et par pixel dans un ensemble de 16
 
 	IFNE	CLIPPING		; Support du clipping
@@ -233,6 +234,7 @@ BmpLine:
 .loopendh	move.w	#$ffff,(a1) ; fin de la liste de points
 	lea	bmpPointBuf,a0
 	bra	BmpPixelPutMono
+	
 	
 	IFNE	0
 BmpHLine:	; Dessine une ligne horizontale

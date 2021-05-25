@@ -14,6 +14,7 @@ VBL	EQU	$70
 LIGNE1Y	EQU	70
 LIGNE2Y	EQU	90	
 
+	SECTION TEXT
 
 main	pea	.efface_ecran
 	move.w	#9,-(sp)
@@ -59,7 +60,6 @@ RasterInit
 	; Sauve vecteur HBL
 	move.l	HBL.w,oldHbl
 	rts
-oldHbl	ds.l 1
 
 
 RasterDeinit
@@ -70,7 +70,7 @@ RasterDeinit
 
 
 RasterVbl	; r‚initialise le raster
-	move.w	#$101,$ffff8240.w	
+;	move.w	FlashBg,$ffff8240.w ; met la couleur du fond (flash)	
 	move.l	#rasterHblHautLigne,HBL.w
 	ori.b	#1,$fffffa07.w ; enable HBL	
 	ori.b	#1,$fffffa13.w ; unmask HBL	
@@ -82,6 +82,7 @@ RasterVbl	; r‚initialise le raster
 	rte
 	ENDC
 
+
 rasterHblHautLigne
 	move.w	#-1,$ffff8240.w	;blanc
 	move.b 	#0,$fffffa1b.w 	;stoppe Timer B
@@ -90,6 +91,7 @@ rasterHblHautLigne
 	bclr 	#0,$fffffa0f.w 	;fin interruption Timer B
 	move.l	#rasterHblMilieuNoir,HBL.w
 	rte
+
 
 rasterHblMilieuNoir
 	clr.w	$ffff8240.w	;noir
@@ -110,9 +112,13 @@ rasterHblBasLigne
 	move.l	#rasterHblBas,HBL.w
 	rte
 
+
 rasterHblBas
-	move.w	#$101,$ffff8240.w	;remet la couleur du fond
+	move.w	FlashBg,$ffff8240.w ;remet la couleur du fond (du flash)
 	bclr	#0,$fffffa07.w	;d‚sactive HBL
 	move.b 	#0,$fffffa1b.w 	;stoppe Timer B
 	bclr 	#0,$fffffa0f.w 	;fin interruption Timer B
 	rte
+
+	SECTION BSS
+oldHbl	ds.l 1

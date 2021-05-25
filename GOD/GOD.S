@@ -1,9 +1,13 @@
+DEBUG	EQU	1
+
 	OUTPUT 	f:\mps\god\GOD.TOS
 
 	OPT	P=68000;
 	OPT	O+
 	OPT	OW-
-;	OPT	NODEBUG
+	IFEQ DEBUG
+	OPT	NODEBUG
+	ENDC
 
 	INCLUDE	macros.i
 
@@ -19,10 +23,10 @@ FBSIZE	EQU	32000
 
 
 	; Pr‚f‚rences
-DEBUG	EQU	0
 CLIPPING	EQU 	0 ; Dans bitmap.s
 
 
+	EVEN
 	SECTION TEXT
 _main	
 	IFNE	DEBUG
@@ -54,15 +58,20 @@ Main	move.l	sp,OldStack
 	move.b	#$12,$fffffc02.w    ; rapport souris
 	andi.b #%11011111,$fffffa09.w ; timer C
 	
+	; Lance la musique parce que les Z coordonnent tout
+	bsr	MusiqueInit
+	bsr	VblInstalle
+	move.l	#VblRoutineIntro,VBL.w
 
 	jsr	Intro
 
- 	RestaurePalette ElitePalette		
+ 	RestaurePalette ElitePalette
+ 	move.w	ElitePalette,FlashBg		
 	bsr	ScnEfface
 
 	bsr	RasterInit
-	bsr	MusiqueInit
-	bsr	VblInstalle
+	move.l	#VblRoutine,VBL.w
+		
 	IFEQ	DEBUG
 	bsr	KbdInstalle
 	ENDC	
@@ -77,12 +86,18 @@ Main	move.l	sp,OldStack
 BouclePrincipale
 	IFNE	DEBUG
 	Bconstat2
-	bne.s	quitte
+	beq.s	.nokey
+	Cnecin
+	cmp.w	#' ',d0
+	beq.s	quitte
+	bsr	MusiqueZKey
+.nokey
 	ELSE
 	tst.w	FlagQuitter
 	bne.s	quitte
 	ENDC
-	
+
+	bsr	MusiqueZ
 	bsr	EliteAnimation
 	bsr	ScrollAnimation
 	jsr	Cube3dAnimation
@@ -119,7 +134,6 @@ quitte
 
 VblInstalle
 	move.l	VBL.w,OldVbl
-	move.l	#VblRoutine,VBL.w
 	rts
 
 
@@ -129,7 +143,16 @@ VblDesinstalle
 
 	
 VblRoutine
+	bsr	FlashAnimation
+	tst.w	flashClr
+	bpl.s	.noraster; si on flash, pas de raster
 	bsr	RasterVbl
+.noraster	bsr	MusiqueAnimation
+	move.l	OldVbl,-(sp)
+	rts
+
+VblRoutineIntro; routine VBL pour l'intro (pas de raster)
+	bsr	FlashAnimation
 	bsr	MusiqueAnimation
 	move.l	OldVbl,-(sp)
 	rts
@@ -170,7 +193,8 @@ KbdRoutine
 	INCLUDE ligne.s
 	INCLUDE logo.s
 	INCLUDE intro.s
-
+	INCLUDE flash.s
+	
 	SECTION BSS
 	EVEN
 FlagQuitter ds.w	1	; Si -1 on quitte

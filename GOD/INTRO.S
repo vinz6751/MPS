@@ -1,12 +1,24 @@
+; Intro avec anneau grandissant et alien
+; Vinz/MPS
+INTRO_DEBUG EQU 1
+
 	SECTION TEXT
 INTRO_GRADS	EQU 10 ; nombre de couleurs du gradient
 
 
 Intro	
-	bsr	ScnEfface
+	clr.w	FlashBg
 	jsr	IntroAlienInit
 
-.lpintro	
+.lpintro	; Boucle de l'intro
+	IFNE INTRO_DEBUG
+	Cconis
+	tst.w	d0
+	beq.s	.nokey
+	Cnecin
+	bsr	MusiqueZKey
+	ENDC
+.nokey	bsr	MusiqueZ
 
 	tst.w	cercle_fin
 	bne.s	.skipcercle
@@ -15,31 +27,14 @@ Intro
 
 	tst.w	AlienFin
 	bne.s	.skipAlien
+	tst.w	IntroZoomAlien
+	beq.s	.skipAlien
+	clr.w	IntroZoomAlien
 	bsr	IntroAlienAnimation
 .skipAlien
-
-	move.w	cercle_fin,d0
-	add.w	AlienFin,d0
-	cmp.w	#-2,d0
-	beq.s	.flash
-
-.cont
-	move.w	#10000,d7
-.waiter	nop
-;	dbra	d7,.waiter
 	
-	bra.s	.lpintro
-
-.flash	lea	$ffff8240.w,a0
-	move.w	#$777,(a0)
-.flashlp	move.w	#5000,d7
-.flashwt	divs	#1234,d0
-	dbra	d7,.flashwt
-	subi.w	#$777/7,(a0)
-	bgt.s	.flashlp
-	
-	
-;	bsr	pause
+	tst.w	IntroFinie ; Attend Z
+	beq.s	.lpintro ; intro pas finie, on boucle
 	rts	
 cercle_fin dc.w	0 ; signale la fin de l'animation du cercle
 	
@@ -107,3 +102,7 @@ cercleAnimation
 .finintro
 
 	INCLUDE	alien2.s
+
+	SECTION DATA
+IntroFinie dc.w	0
+IntroZoomAlien dc.w 0

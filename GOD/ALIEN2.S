@@ -56,7 +56,7 @@ IntroAlienAnimation
 	beq.s	.do
 	rts
 	
-.do	move.w	#4,.slow
+.do	move.w	#7,.slow
 	move.w	.gros(pc),d2
 	cmpi.w	#ALIEN_MAX_ZOOM,d2
 	bne.s	.do1
@@ -68,10 +68,11 @@ IntroAlienAnimation
 	bsr.s	ali2_calcule_ligne
 	
 	addi.w	#1,.gros
-	bra.s	IntroAlienAnimation
+	;bra.s	IntroAlienAnimation
+	bsr	pause
 	rts
 .gros	dc.w	1
-.slow	dc.w	40 ; retard initial
+.slow	dc.w	60 ; retard initial
 
 ali2_calcule_ligne
 	; Calcule le rendu de l'alien
@@ -138,10 +139,10 @@ ali2_calcule_ligne
 	mulu	d2,d5		; * le grossisseement
 .clrligne	move.w	d4,d6		; d‚compteur de groupes
 	movea.l	a1,a2
-.clrgrp	clr.l	(a2)+		; 1 groupe 
-	clr.l	(a2)+
-;	move.l	#$62841423,(a2)+
-;	move.l	#$55555550,(a2)+
+.clrgrp ;	clr.l	(a2)+		; 1 groupe 
+	;clr.l	(a2)+
+	move.l	#$ffff0000,(a2)+
+	move.l	#-1,(a2)+
 	dbra	d6,.clrgrp
 	lea	160(a1),a1	; ligne suivante
 	dbra	d5,.clrligne

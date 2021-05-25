@@ -27,14 +27,18 @@ ScrollDeinit
 	rts
 
 ScrollAnimation
+	tst.w	ScrollOnOff
+	bne.s	.do
+	
 	; Ralentisseur
 ;	move.w	.ralentisseur,d7
 ;	bne.s	.attend
 ;	move.w	#2,.ralentisseur
 ;	bra.s	.do			
 ;.attend	subi.w	#1,.ralentisseur
-;	rts
-;.do
+	rts
+
+.do
 	; D‚compteur de pixel et chargement du prochain caractŠre
 	subi.w	#1,scrollPix
 	bne.s	.scroll
@@ -95,6 +99,7 @@ offset	SET	offset+10*4
 	rts		
 	
 	SECTION DATA
+ScrollOnOff dc.w -1
 scrollMessage	
 	; Message … afficher, produit par l'outil EXTRAITL.S pour
 	; remplacer les codes ASCII par des num‚ros de cellule dans le fichier FONT.BIN
@@ -112,5 +117,5 @@ scrollPix	dc.w FONT_W-1	; d‚compteur de colonne de cellule … afficher
 scrollCarBmp	ds.l 1 		; pointeur vers l'image du caractŠre … afficher
 scrollBuf		ds.b FONT_W*FONT_H 	; buffer ou on d‚cale les bits du caractŠre … afficher
 scrollFntIndex	ds.l FONT_LEN	; pointeurs vers cellules
-	SECTION TEXT
 
+	SECTION TEXT

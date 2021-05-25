@@ -3,8 +3,11 @@ LIGNE1Y	EQU	79
 LIGNE2Y	EQU	170
 LIGNEMY	EQU	(LIGNE2Y-LIGNE1Y)/2
 LIGNE_RALENTISSEUR EQU 7
+
+LIGNE_BMP	EQU 0 ; utilise un bitmap pour la ligne
 	
 LigneInit:
+	IFNE LIGNE_BMP
 	; pr‚paration ligne 1
 	; puisqu'on va utiliser des movems x,-(ay) pour copier la ligne
 	; il faut lire les groupes de registres de droite … gauche
@@ -16,12 +19,16 @@ LigneInit:
 	movem.l	d0-d7/a2-a6,ligne1_3
 	movem.l	(a0)+,d0-d7/a2-a6
 	movem.l	d0-d7/a2-a6,ligne1_4
+	ENDC
 	rts
 
 LigneDeinit:
 	rts
 
 LigneAnimation:
+	tst.w	LigneOnOff
+	beq.s	.rts
+	
 ;	subi.w	#1,ligneralentisseur
 ;	beq.s	.fait
 ;	rts	
@@ -42,27 +49,37 @@ LigneAnimation:
 	cmp.w	d2,d1
 	beq.s	.nodraw1 ; pas la peine de redessiner si nouveau y = ancien
 
+	IFNE LIGNE_BMP
 	move.w	d0,-(sp)   ; sauve d0 (ancienne position)
 	move.w	d1,ligne1y ; sauve d1 (nouvelle position)
 
-;	bsr	BmpClearLineStLow ; efface ancienne position
+	bsr	BmpClearLineStLow ; efface ancienne position
 	move.w	ligne1y(pc),d1
-;	bsr.s	.dessine ; dessine la nouvelle
+	bsr.s	.dessine ; dessine la nouvelle
 
 	; efface la ligne du bas
 	move.w	(sp),d0
+	ELSE
+	move.w	d1,ligne1y ; sauve d1 (nouvelle position)
+	ENDC
+	
 	addi.w	#LIGNE2Y-LIGNE1Y,d0
-;	bsr	BmpClearLineStLow ; efface ancienne position
+	IFNE LIGNE_BMP
+	bsr	BmpClearLineStLow ; efface ancienne position
 	move.w	ligne1y(pc),d1
+	ENDC
 	addi.w	#LIGNE2Y-LIGNE1Y,d1
 	move.w	d1,ligne2y
-;	bsr.s	.dessine ; dessine la nouvelle
+	
+	IFNE LIGNE_BMP
+	bsr.s	.dessine ; dessine la nouvelle
 	addq.l	#2,sp
+	ENDC
 .nodraw1
 
-	rts
+.rts	rts
 	
-
+	IFNE LIGNE_BMP
 .dessine	; dessine la ligne dont le y est en d1.w
 	lea 	bmpLineYOffsets,a1
 	addq.w	#1,d1 ; on commence sur la ligne suivante … cause de la pr‚d‚cr‚mentation
@@ -79,6 +96,7 @@ LigneAnimation:
 	movem.l	d0-d7/a2-a6,-(a1)
 	move.l	ligne1_1,-(a1)	
 	rts
+	ENDC
 ligneh_angle dc.w	0 ; angle pour table des sinus
 ligne1yold dc.w	LIGNE1Y ; ancien y (… effacer)
 ligne1y	dc.w	LIGNE1Y
@@ -86,12 +104,20 @@ ligne2y	dc.w	LIGNE2Y
 ligneralentisseur dc.w LIGNE_RALENTISSEUR
 	
 	SECTION DATA
+	IFNE LIGNE_BMP
 ligne1	INCBIN "elite\line1.bmp"
 ;ligne2	INCBIN "elite\line2.bmp"
+	ENDC
+
+	SECTION DATA
+	EVEN
+LigneOnOff dc.w	-1; indique si la ligne doit osciller ou pas
 
 	SECTION BSS
 	EVEN
+	IFNE LIGNE_BMP
 ligne1_4	ds.w	13*4
 ligne1_3	ds.w	13*4
 ligne1_2	ds.w	13*4
 ligne1_1	ds.w	4
+	ENDC

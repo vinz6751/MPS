@@ -1,4 +1,18 @@
-; Routines de blittage
+; Routines utilitaires de blittage
+
+	SECTION TEXT
+	
+BlitCalcOffset
+	; Calcule l'offset dans la m‚moire ‚cran x,y
+	; x doit ˆtre un multiple de 8
+	; d0.l: x d1.w: y
+	; Affecte d0-d1/a1
+	lea	bmpLineYOffsets,a1
+	add.w	d1,d1
+	add.w	(a1,d1.w),d0
+	add.l	BmpFb,d0
+	rts
+
 
 BlitL32
 	; Blitte une image de 32 pixels de large
@@ -10,7 +24,7 @@ BlitL32
 	move.w	(a1,d1.w),a1	; offset ligne
 	adda.l	BmpFb,a1		; frame buffer
 	add.w	d0,a1		; ajout x
-.lpy	move.l	(a0)+,(a1)+ 
+.lpy	move.l	(a0)+,(a1)+ 	; copie 2 groupes
 	move.l	(a0)+,(a1)+
 	move.l	(a0)+,(a1)+
 	move.l	(a0)+,(a1)	
@@ -62,20 +76,7 @@ BlitShiftDown32_1px
 	clr.l	(a0)+
 	clr.l	(a0)
 	rts
-	ENDC
-
-BlitCalcOffset
-	; Calcule l'offset dans la m‚morie ‚cran x,y
-	; x doit ˆtre un multiple de 8
-	; d0.l: x d1.w: y
-	; Affecte d0-d1/a1
-	lea	bmpLineYOffsets,a1
-	add.w	d1,d1
-	add.w	(a1,d1.w),d0
-	add.l	BmpFb,d0
-	rts
 	
-	IFNE 0 ; inutilis‚
 Blit16x10	; Blitte le bloc de 16x10 pixels point‚ par a0 vers l'adresse
 	; point‚e par a1
 	; N'affecte rien
@@ -86,5 +87,5 @@ b1610l	SET	0	; Offset de ligne
 b1610l	SET	b1610l+160
 	ENDR
 	rts
-
+	
 	ENDC

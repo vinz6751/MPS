@@ -1,5 +1,7 @@
 CUBE3D_DEBUG	EQU 0
 
+	SECTION TEXT
+
 	IFNE   CUBE3D_DEBUG
 ******************** DEBUG *******************
 
@@ -152,6 +154,14 @@ Cube3dDeinit:
 	rts
 
 
+CubeInverseRotation
+	; Inverse la rotation du cube en a0
+	not.w	c_xspeed(a0)
+	not.w	c_yspeed(a0)
+	not.w	c_zspeed(a0)
+	rts	
+	
+
 Cube3dAnimation:
 ;	subq.w #1,cube3d_limiteur
 ;	bne.s  .fin
@@ -171,25 +181,25 @@ Cube3dAnimation:
 	btst   #0,d0
 	beq.s   .skip1
 	lea    cube1,a6
-	bsr    anime_cube
+	bsr.s  anime_cube
 	bra.s  .fin
 .skip1
 	btst   #1,d0
 	beq.s  .skip2
 	lea    cube2,a6
-	bsr    anime_cube
+	bsr.s  anime_cube
 	bra.s  .fin
 .skip2
 	btst   #2,d0
 	beq.s  .skip3
 	lea    cube3,a6
-	bsr    anime_cube
+	bsr.s  anime_cube
 	bra.s  .fin
 .skip3
 	btst   #3,d0
 	beq.s  .skip4
 	lea    cube4,a6
-	bsr    anime_cube
+	bsr.s  anime_cube
 .skip4	
 .fin	rts
 
@@ -296,9 +306,6 @@ anime_cube:
 	movea.l c_newpts(a6),a3    ;Nouvelles coordonn‚es
 	lea     linebuf,a0
 	move.w  c_couleur(a6),d0
-;	addq.b  #1,d0
-;	andi.b  #$f,d0
-;	move.w  d0,c_couleur(a6)
 	bsr     model_draw
           rts
 

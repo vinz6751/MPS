@@ -1,3 +1,6 @@
+; Macros BIOS/XBIOS/GEMDOS et utilitaires
+; Vinz/MPS
+
 Supexec	MACRO
 	pea	\1
 	move.w	#38,-(sp)
@@ -5,8 +8,28 @@ Supexec	MACRO
 	addq.l	#6,sp
 	ENDM
 
+Cconout	MACRO
+	move.w	\1,-(sp)
+	move.w	#2,-(sp)
+	trap	#1
+	addq.l	#4,sp
+	ENDM
+
 Cnecin	MACRO
 	move.w	#8,-(sp)
+	trap	#1
+	addq.l	#2,sp
+	ENDM
+
+Cconws	MACRO
+	move.l	\1,-(sp)
+	move.w	#9,-(sp)
+	trap	#1
+	addq.l	#6,sp
+	ENDM
+
+Cconis	MACRO
+	move.w	#11,-(sp)
 	trap	#1
 	addq.l	#2,sp
 	ENDM
@@ -68,7 +91,6 @@ Fclose	MACRO
 	addq.l	#4,sp
 	ENDM
 
-
 Pterm0	MACRO
 	clr.w	-(sp)
 	trap	#1	; Pterm0
@@ -91,9 +113,10 @@ Bconin2	MACRO
 
 KbdFlush MACRO
 .debut\@	
-	Bconstat2
+	Cconis
+	tst.w	d0
 	beq.s	.fin\@
-	Bconin2
+	Cnecin
 	bra.s	.debut\@
 .fin\@
 	ENDM
@@ -101,11 +124,11 @@ KbdFlush MACRO
 
 
 SauvePalette MACRO
-	movem.l	$ffff8240,d0-d7
+	movem.l	$ffff8240.w,d0-d7
 	movem.l	d0-d7,\1
 	ENDM
 
 RestaurePalette MACRO
 	movem.l	\1,d0-d7
-	movem.l	d0-d7,$ffff8240
+	movem.l	d0-d7,$ffff8240.w
 	ENDM

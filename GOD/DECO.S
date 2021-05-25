@@ -8,7 +8,7 @@ DECO_DEBUG EQU 0
 	ENDC
 
 	SECTION TEXT
-DecoInit:	
+DecoInit:		
 	lea    decoBidules,a0
 	bsr.s  .initDeco
 	
@@ -37,8 +37,8 @@ DecoDeinit:
 	rts
 
 	
-DecoAnimation:	
-	REPT 4
+DecoAnimation:		
+	REPT 1
 	lea   decoBidules,a0
 	bsr.s decoRender
 	ENDR
