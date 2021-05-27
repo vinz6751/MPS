@@ -63,6 +63,9 @@ Main	move.l	sp,OldStack
 	bsr	VblInstalle
 	move.l	#VblRoutineIntro,VBL.w
 
+
+	bsr	ScrollInit ; on a besoin des routines de dessin de caractŠre
+
 	jsr	Intro
 
  	RestaurePalette ElitePalette
@@ -76,7 +79,6 @@ Main	move.l	sp,OldStack
 	bsr	KbdInstalle
 	ENDC	
 	bsr	EliteInit
-	bsr	ScrollInit
 	jsr	Cube3dInit
 	jsr	DecoInit
 	jsr	LigneInit
@@ -134,6 +136,7 @@ quitte
 
 VblInstalle
 	move.l	VBL.w,OldVbl
+	clr.l	VblCount
 	rts
 
 
@@ -143,19 +146,22 @@ VblDesinstalle
 
 	
 VblRoutine
+	bsr	MusiqueAnimation
 	bsr	FlashAnimation
 	tst.w	flashClr
 	bpl.s	.noraster; si on flash, pas de raster
 	bsr	RasterVbl
-.noraster	bsr	MusiqueAnimation
-	move.l	OldVbl,-(sp)
-	rts
+.noraster	rte
+;	move.l	OldVbl,-(sp)
+;	rts
 
 VblRoutineIntro; routine VBL pour l'intro (pas de raster)
-	bsr	FlashAnimation
 	bsr	MusiqueAnimation
-	move.l	OldVbl,-(sp)
-	rts
+	bsr	FlashAnimation
+	addq.l	#1,VblCount
+.skip	rte
+;	move.l	OldVbl,-(sp)
+;	rts
 
 
 KbdInstalle
@@ -189,11 +195,12 @@ KbdRoutine
 	INCLUDE raster.s
 	INCLUDE musique.s
 	INCLUDE cube3d.s
-	INCLUDE deco.s
-	INCLUDE ligne.s
-	INCLUDE logo.s
-	INCLUDE intro.s
-	INCLUDE flash.s
+	INCLUDE deco.s	; d‚co bitmap
+	INCLUDE ligne.s	; animation ligne blanches horizontales
+	INCLUDE logo.s	; logo Atari
+	INCLUDE intro.s	; intro message, cercle concentrique + alien
+	INCLUDE flash.s	; effet de flash
+	INCLUDE texte.s	; petit message au d‚but
 	
 	SECTION BSS
 	EVEN
@@ -201,6 +208,7 @@ FlagQuitter ds.w	1	; Si -1 on quitte
 OldStack	  ds.l	1	; ancienne pile
 OldPalette  ds.w	16	; ancienne palette de couleur	
 OldVbl	  ds.l	1	; ancien vecteur VBL
+VblCount	  ds.l	1	; nombre de VBLs ‚coul‚es
 OldKbdVecs  ds.l	1	; ancien vecteur clavier
 	  ds.b	2024	; 1Ko de pile
 Stack	  ds.l	1	; sommet de la pile

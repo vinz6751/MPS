@@ -36,14 +36,14 @@ Cconis	MACRO
 
 Fopen	MACRO
 	move.w	#0,-(sp)	; Read only
-	pea	\1
+	move.l	\1,-(sp)
 	move.w	#61,-(sp)
 	trap	#1
 	addq.l	#8,sp
 	ENDM
 	
 Fdelete	MACRO
-	pea	\1
+	move.l	\1,-(sp)
 	move.w	#65,-(sp)
 	trap	#1
 	addq.l	#6,sp
@@ -60,7 +60,7 @@ Fseek	MACRO
 
 Fcreate	MACRO
 	move.w	#0,-(sp)
-	pea	\1
+	move.l	\1,-(sp)
 	move.w	#60,-(sp)	; Fcreate
 	trap	#1
 	addq.l	#8,sp

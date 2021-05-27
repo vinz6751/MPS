@@ -9,6 +9,7 @@ INTRO_GRADS	EQU 10 ; nombre de couleurs du gradient
 Intro	
 	clr.w	FlashBg
 	jsr	IntroAlienInit
+	jsr	TexteInit
 
 .lpintro	; Boucle de l'intro
 	IFNE INTRO_DEBUG

@@ -1,7 +1,7 @@
-ZIC_DEBUG	  EQU 1 ; MusiqueZKey pour contr“ller Z avec le clavier
-ZIC_TEST	  EQU 0 ; programme de test
+ZIC_DEBUG	   EQU 1 ; MusiqueZKey pour contr“ller Z avec le clavier
+ZIC_TEST	   EQU 0 ; programme de test
 ZIC_HANDLERS EQU 1 ; appelle les vrais handlers de Z
-ZIC_FICHIER EQU 1 ; charge zic.snd plut“t que le fichier int‚gr‚
+ZIC_FICHIER  EQU 1 ; charge zic.snd plut“t que le fichier int‚gr‚
 
 	
 	SECTION TEXT
@@ -103,11 +103,6 @@ MusiqueZ ; Traite les codes de synchro
 	beq.s	.rts ; si inchang‚, on fait rien
 	move.b	d3,zicZ
 
-	IFEQ	ZIC_HANDLERS
-	move.w	d3,d4
-	add.b	#'a',d4
-	Cconout	d4
-	ELSE	
 	; Appelle le gestionnaire de Z	
 	add.l	d3,d3
 	add.l	d3,d3
@@ -116,10 +111,9 @@ MusiqueZ ; Traite les codes de synchro
 	cmpa.l	#0,a3
 	beq.s	.rts; Z pas g‚r‚
 	jmp	(a3)
-;	ENDC
 .rts	rts
 
-	IFNE	ZIC_HANDLERS
+
 zHandlers	dc.l	0
 	dc.l	EliteBump
 	dc.l	zLogoStart
@@ -135,7 +129,7 @@ zHandlers	dc.l	0
 	dc.l	zScrollOff  ; 18
 	dc.l	zLigneOn    ; 19
 	dc.l	zLigneOff   ; 20
-	dc.l	0,0,0,zFinIntro   ; 21-24
+	dc.l	zFinTexte,0,0,zFinIntro   ; 21-24
 	dc.l	zAlien
 	dc.l	zFinIntro	
 	dc.l 	zCube1Stop, zCube2Stop, zCube3Stop, zCube4Stop ;27-30
@@ -143,11 +137,6 @@ zHandlers	dc.l	0
 	dc.l	zCube1RotReset, zCube2RotReset, zCube3RotReset, zCube4RotReset ;32-35
 	dc.l	zCubeAllRotReset ; 36
 	dc.l	zCubeSpdReset ; 37
-	ELSE
-zHandlers	REPT 27
-	dc.l	0
-	ENDR
-	ENDC
 	
 zLogoStart
 	move.w	#-1,LogoOnOff
@@ -307,12 +296,15 @@ zCubeAllBlanc ; Met tous les cubes en blanc
 	
 zFinIntro	move.w	#-1,IntroFinie
 	rts
+
+zFinTexte	move.w	#-1,TxtFini
+	rts
 	
 zFlash	bra	FlashNow
 
 zAlien	move.w	#-1,IntroZoomAlien
 	rts
-	ENDC	
+
 
 	IFEQ ZIC_FICHIER
 	SECTION DATA

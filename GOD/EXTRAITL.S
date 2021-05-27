@@ -1,4 +1,9 @@
-; Outil d'extraction des lettres de ELITE et de la palette
+; Outil d'extraction:
+* des lettres de ELITE
+* de la palette
+* du message to scroll text (conversion ASCII->no de cellule)
+* du message de l'intro (pareil)
+
 	OUTPUT f:\mps\god\extrait.tos
 
 X	EQU	0
@@ -10,8 +15,8 @@ HAUTEUR	EQU	39
 
 	; Sauve le buffer dans le fichier nomm‚ par a5
 SAUVE	MACRO
-	Fdelete	\1
-	Fcreate	\1,0
+	Fdelete	#\1
+	Fcreate	#\1,0
 	move.w	d0,handle
 	Fwrite	d0,len,buf
 	Fclose	handle
@@ -147,7 +152,7 @@ logoAnimation:
 
 
 alien:	; gros alien rouge. Il est avec la couleur 7 donc on va 
-	Fopen	nom_bidules
+	Fopen	#nom_bidules
 	move.w	d0,handle
 	Fread	handle,#32034,buf
 	Fclose	handle
@@ -161,15 +166,29 @@ alien:	; gros alien rouge. Il est avec la couleur 7 donc on va
 	ENDR
 	lea	160(a2),a2
 	dbra	d4,.boucle
-	Fdelete	nom_alien
-	Fcreate	nom_alien
+	Fdelete	#nom_alien
+	Fcreate	#nom_alien
 	move.w	d0,handle
 	Fwrite	handle,#40*50,buf2
 	Fclose	handle
 
+traduitMessage:
+	lea	nom_scrollmsg,a5
+	lea	nom_scrollbin,a6
+	bsr	ascii2cell
+	lea	nom_introtxt,a5
+	lea	nom_introbin,a6
+	bsr	ascii2cell
+	
+	Pterm0
+	
+; ---------- Sous programmes -------------
+	
 
-scrollMessage:
-	Fopen	nom_scrollmsg
+ascii2cell: 
+	; Convertit le fichier texte en a5 en num‚ro de cellules
+	; et stocke le r‚sultat dans le nom de fichier a6 
+	Fopen	a5
 	move.w	d0,handle
 	Fseek	#0,handle,#2
 	move.l	d0,d7
@@ -179,8 +198,16 @@ scrollMessage:
 	lea	buf,a0
 	move.b	#-1,(a0,d7.w)	; force fin du message
 .boucle	move.b	(a0),d0
-	beq.s	.fait
-	cmpi.b	#'0',d0
+	beq	.fait
+	cmpi.b	#10,d0 ; LF
+	bne.s	.paslf
+	move.b	#-2,(a0)+
+	bra.s	.boucle
+.paslf	cmpi.b	#13,d0 ; CR
+	bne.s	.pascr
+	move.b	#-3,(a0)+
+	bra.s	.boucle
+.pascr	cmpi.b	#'0',d0
 	blt.s	.pasChiffre
 	cmpi.b	#'9',d0
 	bgt.s	.pasChiffre
@@ -214,20 +241,18 @@ scrollMessage:
 .interrog	cmpi.b	#'?',d0
 	bne.s	.alpha
 	move.b	#41,(a0)+
-	bra.s	.boucle
+	bra	.boucle
 .alpha	subi.b	#'A',(a0)+
-	bra.s	.boucle
+	bra	.boucle
 	
 .fait	move.b	#-1,(a0)
 	addq.l	#1,d7	; ajoute octet de fin
-	Fdelete	nom_scrollbin
-	Fcreate	nom_scrollbin
+	Fdelete	a6
+	Fcreate	a6
 	move.w	d0,handle
 	Fwrite	handle,d7,buf
 	Fclose	handle
-	
-	
-	Pterm0
+	rts
 
 	
 calculeYoffset
@@ -266,6 +291,8 @@ nom_e2	dc.b	"elite\e2.bin",0
 nom_palette	dc.b "elite\palette.bin",0
 nom_scrollmsg 	dc.b "message.txt",0
 nom_scrollbin	dc.b "message.bin",0
+nom_introtxt	dc.b "introtxt.txt",0,0 ; pour EVEN
+nom_introbin	dc.b "introtxt.bin",0,0
 nom_bidules	dc.b "elite\bidules.pi1",0
 nom_alien		dc.b "alien.bin",0
 nom_logoanim	dc.b "elite\logoanim.pi1",0
