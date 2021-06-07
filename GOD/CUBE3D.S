@@ -74,6 +74,8 @@ Cube3dInit:
 	move.l #$00040003,c_xspeed(a0)
 	move.w #$0004,c_zspeed(a0)
 	move.w #1,c_couleur(a0)
+	move.l #cubgrad1,c_clrgrd(a0)
+	clr.w  c_clrgrdi(a0)
 	move.w #1,c_efface(a0)
 	
 	IFNE 1
@@ -88,7 +90,9 @@ Cube3dInit:
 	move.w #-4,c_xspeed(a0)
 	move.w #3,c_yspeed(a0)
 	move.w #3,c_zspeed(a0)
-	move.w #7,c_couleur(a0)
+	move.w #2,c_couleur(a0)
+	move.l #cubgrad2,c_clrgrd(a0)
+	move.w #18,c_clrgrdi(a0)
 	move.w #-1,c_efface(a0)
 
 	; Initialisation cube 3	
@@ -102,7 +106,9 @@ Cube3dInit:
 	move.w #-3,c_xspeed(a0)
 	move.w #-4,c_yspeed(a0)
 	move.w #3,c_zspeed(a0)
-	move.w #11,c_couleur(a0)
+	move.w #3,c_couleur(a0)
+	move.l #cubgrad3,c_clrgrd(a0)
+	move.w #8,c_clrgrdi(a0)
 	move.w #-1,c_efface(a0)
 
 	; Initialisation cube 4	
@@ -116,7 +122,9 @@ Cube3dInit:
 	move.w #4,c_xspeed(a0)
 	move.w #3,c_yspeed(a0)
 	move.w #-4,c_zspeed(a0)
-	move.w #12,c_couleur(a0)
+	move.w #4,c_couleur(a0)
+	move.l #cubgrad5,c_clrgrd(a0)
+	move.w #12,c_clrgrdi(a0)
 	move.w #1,c_efface(a0)
 
 	ENDC
@@ -395,9 +403,47 @@ CUBEBOXH	EQU 69
 	
 	rts
 		
+
+Cube3dGradientAnimation:
+	tst.b	CubeGradOnOff
+	beq.s	.rts
+	; 1 changement par VBL max
+	move.l	VblCount,d1
+	cmp.l	cube_prevVbl,d1
+	beq.s	.rts
+	move.l	d1,cube_prevVbl
+	
+	subi.w	#1,cube_gradral
+	bne.s	.rts
+	move.w	#15,cube_gradral
+	
+	lea	RasterPal,a1 ; incr‚ment‚ par chaque appel … .dogradient
+	
+	; Traite gradient de chaque cube
+	lea	cube1,a0
+	bsr.s	.dogradient
+	lea	cube2,a0
+	bsr.s	.dogradient
+	lea	cube3,a0
+	bsr.s	.dogradient
+	lea	cube4,a0
+	
+.dogradient:	
+	move.l	c_clrgrd(a0),a2 ; gradient
+	move.w	c_clrgrdi(a0),d1 ; index (*2) dans le gradient
+	addq.w	#2,d1  ; on intŠgre le facteur d'‚chelle
+	move.w	(a2,d1.w),d2 ; couleur
+	bne.s	.nowrap
+	moveq	#2,d1 ; wrap le gradient
+	move.w	(a2,d1.w),d2 ; ‚vite le noir
+.nowrap	move.w	d1,c_clrgrdi(a0)
+	move.w	d2,(a1)+; ‚crit la couleur dans la palette raster
+.rts	rts	
+	
 	
 ;	SECTION   DATA
 cube3d_shifter  dc.b %10001000
+CubeGradOnOff   dc.b 1
 	EVEN
 	
 ; ------- D‚finition d'une figure ------
@@ -406,6 +452,8 @@ c_xcenter	rs.w 1  ;X centre
 c_ycenter	rs.w 1  ;Y centre
 c_ycentro rs.w 1  ;Y centre ancien
 c_couleur	rs.w 1  ;No de couleur
+c_clrgrd  rs.l 1  ;Pointeur vers gradient
+c_clrgrdi rs.w 1  ;Index dans le gradient
 c_efface  rs.w 1  ;Indique s'il faut effacer ou pas avant de dessiner
 c_x_alpha rs.w 1  ;Angle axe X
 c_y_beta  rs.w 1  ;Angle axe Y
@@ -510,11 +558,33 @@ cosinus	dc.b  $00,$03,$06,$09,$0C,$0F,$12,$15   0 … 10 degr‚s
 	EVEN
 
 cubes	dc.l  cube1,cube2,cube3,cube4
+cubgrad1	dc.w $200,$411,$610,$720,$741,$762,$773,$775
+	dc.w $773,$762,$741,$720,$610,$411,$200,0; plut“t orange
+	     
+cubgrad2	dc.w $120,$231,$242,$352,$472,$573,$674,$776
+	dc.w $674,$573,$472,$352,$242,$231,$120,0 ; plut“t vert
+
+cubgrad3  dc.w $102,$203,$313,$414,$524,$634,$645,$756
+	dc.w $645,$634,$524,$414,$313,$203,$102,0 ; plut“t violet
+
+cubgrad4  dc.w $101,$211,$222,$323,$433,$543,$653,$763
+	dc.w $653,$543,$433,$323,$222,$211,$101,0
+; violet … jaune fadasse
+
+cubgrad5  dc.w $210,$320,$421,$531,$641,$652,$663,$764 ; marron … jaune fadasse
+	dc.w $663,$652,$641,$531,$421,$320,$210,0
+	
+cubgrad7  dc.w $020,$131,$141,$251,$262,$372,$574,$675 ; vert fonc‚ … vert clair
+cubgrad8  dc.w $400,$510,$620,$730,$741,$752,$763,$764 ; rouge sombre … jaune fadasse
+cubgrad9	dc.w  $102,$013,$123,$134,$244,$255,$266,$477 ; plut“t bleu
+
+cube_gradral dc.w  20        ;ralentisseur d‚fil‚ de gradient
+
 
 	  SECTION BSS
-linebuf	  ds.w  4         ;x1,y1,x2,y2 pour BmpLine
-
-cube1	  ds.b  c_sizeof
+linebuf	   ds.w 4        ;x1,y1,x2,y2 pour BmpLine
+cube_prevVbl ds.l 1	       ;d‚tecteur changement de VBL
+cube1	   ds.b  c_sizeof
 	EVEN
 cube1ptsbuf ds.w  NPOINTS*3*2
 

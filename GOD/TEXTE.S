@@ -17,9 +17,10 @@ TexteInit:
 	IFNE TEXTE_DEBUG
 	Cconis
 	tst.w	d0
-	beq.s	.wait
+	beq.s	.nokey
 	Cnecin
 	bsr	MusiqueZKey
+.nokey
 	ENDC
 
 	bsr	MusiqueZ
@@ -30,6 +31,8 @@ TexteInit:
 	rts
 
 putString ; affiche la chaŒne (num‚ros de cellule) en a4
+	bsr	MusiqueZ
+
 	move.b	(a4)+,d0
 	cmpa.l	#textefin,a4
 	beq.s	.fin

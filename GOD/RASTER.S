@@ -100,6 +100,8 @@ rasterHblMilieuNoir
 	move.b 	#8,$fffffa1b.w 	;commence … compter les ‚vŠnements
 	bclr 	#0,$fffffa0f.w 	;fin interruption Timer B
 	move.l	#rasterHblBasLigne,HBL.w
+	move.l	RasterPal,$ffff8242.w
+	move.l	RasterPal+4,$ffff8246.w
 	rte
 
 
@@ -118,7 +120,13 @@ rasterHblBas
 	bclr	#0,$fffffa07.w	;d‚sactive HBL
 	move.b 	#0,$fffffa1b.w 	;stoppe Timer B
 	bclr 	#0,$fffffa0f.w 	;fin interruption Timer B
+	
+	; restore les couleurs 1-4 affect‚es par les gradients des cubes
+	move.l	ElitePalette+2,$ffff8242.w
+	move.l	ElitePalette+6,$ffff8246.w
+	
 	rte
 
 	SECTION BSS
 oldHbl	ds.l 1
+RasterPal ds.w 4

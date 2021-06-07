@@ -100,7 +100,7 @@ MusiqueZ ; Traite les codes de synchro
 	clr.l	d3
 	move.b	zicSnd+$b8,d3
 	cmp.b	zicZ,d3
-	beq.s	.rts ; si inchang‚, on fait rien
+	beq.s	.rts ; si inchang‚, on fait rien	
 	move.b	d3,zicZ
 
 	; Appelle le gestionnaire de Z	
@@ -137,6 +137,9 @@ zHandlers	dc.l	0
 	dc.l	zCube1RotReset, zCube2RotReset, zCube3RotReset, zCube4RotReset ;32-35
 	dc.l	zCubeAllRotReset ; 36
 	dc.l	zCubeSpdReset ; 37
+	dc.l	zCubeSpdReset1, zCubeSpdReset2, zCubeSpdReset3, zCubeSpdReset4 ; 38-41
+	dc.l	zCubeGradientOn ; 42
+	dc.l	zCubeGradientOff ; 43
 	
 zLogoStart
 	move.w	#-1,LogoOnOff
@@ -223,25 +226,36 @@ zCubeRotReset ; reset les angles de rotation d'un cube en a0
 	rts
 		
 zCubeSpdReset ; r‚initialise la vitesse de rotation des cubes
+	bsr.s	zCubeSpdReset1
+	bsr.s	zCubeSpdReset2
+	bsr.s	zCubeSpdReset3
+	bra.s	zCubeSpdReset4
+zCubeSpdReset1:
 	lea	cube1,a0
 	move.l #$00040003,c_xspeed(a0)
 	move.w #$0004,c_zspeed(a0)
+	rts
+zCubeSpdReset2:
 	lea	cube2,a0
 	move.w #-4,c_xspeed(a0)
 	move.w #3,c_yspeed(a0)
 	move.w #3,c_zspeed(a0)
+	rts
+zCubeSpdReset3:
 	lea	cube3,a0
 	move.w #-3,c_xspeed(a0)
 	move.w #-4,c_yspeed(a0)
 	move.w #3,c_zspeed(a0)
+	rts
+zCubeSpdReset4
 	lea	cube4,a0
 	move.w #4,c_xspeed(a0)
 	move.w #3,c_yspeed(a0)
 	move.w #-4,c_zspeed(a0)
 	rts			
 
-
 zCubeClrRestore ; Restore les couleurs d'origine des cubes
+	rts
 	lea	cube1,a0
 	move.w	#1,c_couleur(a0)
 	lea	cube2,a0
@@ -269,6 +283,7 @@ zCube4ClrNext ; Change la couleur du cube
 	bra.s	zCubeClrNext
 
 zCubeClrNext ; Change la couleur du cube en a1
+rts
 	move.w	c_couleur(a1),d1
 	addq.w	#1,d1
 	andi.w	#$f,d1
@@ -283,6 +298,7 @@ zCubeClrNext ; Change la couleur du cube en a1
 	rts
 	
 zCubeAllBlanc ; Met tous les cubes en blanc
+	rts
 	moveq	#$3,d0
 	lea	cube1,a0
 	move.w	d0,c_couleur(a0)
@@ -292,6 +308,11 @@ zCubeAllBlanc ; Met tous les cubes en blanc
 	move.w	d0,c_couleur(a0)
 	lea	cube4,a0
 	move.w	d0,c_couleur(a0)
+	rts
+
+zClr1Grad lea	cube1,a0
+	move.l	#cubgrad1,c_clrgrd(a0)
+	clr.w	c_clrgrdi(a0)
 	rts
 	
 zFinIntro	move.w	#-1,IntroFinie
@@ -305,6 +326,13 @@ zFlash	bra	FlashNow
 zAlien	move.w	#-1,IntroZoomAlien
 	rts
 
+zCubeGradientOn
+	move.b	#-1,CubeGradOnOff
+	rts
+	
+zCubeGradientOff
+	clr.b	CubeGradOnOff
+	rts
 
 	IFEQ ZIC_FICHIER
 	SECTION DATA

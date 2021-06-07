@@ -146,22 +146,24 @@ VblDesinstalle
 
 	
 VblRoutine
+	movem.l   d1-d2/a0-a2,-(sp)
+	addq.l	#1,VblCount
 	bsr	MusiqueAnimation
 	bsr	FlashAnimation
+	bsr	Cube3dGradientAnimation
 	tst.w	flashClr
 	bpl.s	.noraster; si on flash, pas de raster
 	bsr	RasterVbl
-.noraster	rte
-;	move.l	OldVbl,-(sp)
-;	rts
+.noraster	movem.l	(sp)+,d1-d2/a0-a2
+	rte
 
 VblRoutineIntro; routine VBL pour l'intro (pas de raster)
 	bsr	MusiqueAnimation
+	move.w	d1,-(sp)
 	bsr	FlashAnimation
+	move.w	(sp)+,d1
 	addq.l	#1,VblCount
 .skip	rte
-;	move.l	OldVbl,-(sp)
-;	rts
 
 
 KbdInstalle
