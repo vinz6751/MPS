@@ -1,33 +1,89 @@
 ; D‚coration de d‚mo avec les "bidules" de STS
 
-DECO_DEBUG EQU 0
+DECO_DEBUG EQU 1
 
 	IFNE DECO_DEBUG
 	OPT	O+
 	OPT	OW+
+
+	move.w	#$2,-(sp)
+	trap	#14; Physbase
+	addq.l	#2,sp
+	move.l	d0,BmpFb
+
+	move.w	#4,-(sp)
+	trap	#14; Getrez
+	addq.l	#2,sp
+	move.w	d0,Rez
+
+	move.w	#0,-(sp) ; ST-basse
+	move.l	#-1,-(sp)
+	move.l	#-1,-(sp)
+	move.	#5,-(sp)
+	trap	#14 ; Setscreen
+	lea	$c(sp),sp
+
+	pea	start
+	move.w	#38,-(sp)
+	trap	#14 ; Supexec
+	addq.l	#6,sp
+
+	bsr	DecoDeinit
+
+	move.w	Rez,-(sp) ; Restaure r‚solution
+	move.l	#-1,-(sp)
+	move.l	#-1,-(sp)
+	move.	#5,-(sp)
+	trap	#14 ; Setscreen
+	lea	$c(sp),sp
+
+	clr.w	-(sp)
+	trap	#1 ; Pterm0
+	
+BmpFb	dc.l	0
+Rez	dc.w	0
+start	bsr.s	DecoInit
+	movea.l	BmpFb,a0
+	move.l	#55555555,(a0)+
+	move.l	#55555555,(a0)
+	
+.loop	
+	move.w	#$0b,-(sp)
+	trap	#1 ; Cconis
+	addq.l	#2,sp
+	tst.w	d0
+	beq.s	.cont
+	rts
+
+.cont	
+	bsr	deco_fantR1
+	;bsr.s	DecoAnimation
+	bra.s	.loop
 	ENDC
+	
 
 	SECTION TEXT
 DecoInit:		
 	lea    decoBidules,a0
-	bsr.s  .initDeco
+	bsr.s  DecoInitListPts
 	
 	lea    decoPacmanO,a0
-	bsr.s  .initDeco
+	bsr.s  DecoInitListPts
+	
+	lea    decoPacmanF,a0
+	bsr.s  DecoInitListPts
 	
 	lea    decoFantomes,a0
-	bsr.s  .initDeco
+	bsr.s  DecoInitListPts
 
 	lea    decoPacgommes,a0
-	bsr.s  .initDeco
+	bsr.s  DecoInitListPts
 
-	IFNE DECO_DEBUG
-.quit	bsr.s DecoDeinit
- 	clr.w -(sp)
-	trap #1	
-	ENDC
+	move.w #20,deco_ralentisseur
 	rts
-.initDeco	move.w deco_w(a0),d0
+
+DecoInitListPts
+	move.w deco_w(a0),d0
 	mulu.w deco_h(a0),d0
 	move.w d0,deco_dcnt(a0)
 	rts
@@ -37,16 +93,30 @@ DecoDeinit:
 	rts
 
 	
-DecoAnimation:		
+DecoAnimation:
+	;bsr.s	deco_fantR1
+	
 	REPT 1
 	lea   decoBidules,a0
 	bsr.s decoRender
 	ENDR
-	
-	REPT 1
+
+	move.w deco_ralentisseur,d4
+	subq.w #1,d4
+	bne.s  .noslow
+	move.w #50,d4
+	lea   decoPacmanF,a0
+	bsr.s DecoInitListPts
 	lea   decoPacmanO,a0
+	bsr.s DecoInitListPts
+.noslow   move.w d4,deco_ralentisseur
+	cmpi.w #10,deco_ralentisseur
+	bge.s .pacmanO
+	lea   decoPacmanF,a0
+	bra.s .pacmanset
+.pacmanO	lea   decoPacmanO,a0
+.pacmanset
 	bsr.s decoRender
-	ENDR
 	
 	REPT 1
 	lea   decoFantomes,a0
@@ -98,12 +168,28 @@ decoRender; Affiche point par point le truc pass‚ en a0 aux coordonn‚es
 	; affiche
 	lea    decoBuf(pc),a0
 	IFNE DECO_DEBUG
-	bsr.s	deco_affiche
+	bsr	deco_affiche
 	ELSE
 	jsr	BmpPixelPutMono
 	ENDC
 
 .fin	rts
+
+FANTOME_H	EQU	11 ; hauteur d'un fant“me
+deco_fantR1:
+	lea 	decoFantR1,a0
+	lea	16*FANTOME_H*7(a0),a0 ; taille d'un preshift
+	move.l	BmpFb,a1 ; destination
+	
+	adda.w	#160*179+8*4,a1 ; qqpart sur l'‚cran
+	
+	lea	16(a1),a1
+	REPT	FANTOME_H
+	movem.l	(a0)+,d0-d3
+	movem.l	d0-d3,-(a1)
+	lea	160+16(a1),a1
+	ENDR
+	rts
 
 	IFNE DECO_DEBUG
 deco_affiche
@@ -114,14 +200,15 @@ decoBuf:	; Buffer pour appel de BmpPixelPutMono
 	dc.w 0
 	dc.w -1
 		
-	SECTION DATA
-	
+	SECTION DATA	
 decoPacmanO:
 	dc.w 0,189,0,0	
 	INCBIN "elite\ppacmano.bmp"
 	EVEN
 	
-; decoPacmanF:	INCBIN "elite\pacmanf.bmp"
+decoPacmanF:
+	dc.w 0,189,0,0	
+	INCBIN "elite\pacmanf.bmp"
 	EVEN
 
 decoFantomes:
@@ -139,8 +226,12 @@ decoPacgommes:
 	INCBIN "elite\pacgomme.bmp"
 	EVEN
 
+decoFantR1:
+	INCBIN "elite\fantomr1.bmp"
+
 	SECTION BSS
 	EVEN
+deco_ralentisseur ds.w 1
 	 rsreset
 deco_x     rs.w 1 ; endroit ou rendre le bitmap
 deco_y	 rs.w 1
